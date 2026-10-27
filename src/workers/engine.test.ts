@@ -165,10 +165,10 @@ describe('engine.runTests', () => {
   })
 
   it('checks printed output line by line, with scripted input()', async () => {
-    const out: TestSpec = { kind: 'output', name: 'greets', stdin: ['Ada'], expected: 'Name? Hello, Ada!\n' }
+    const out: TestSpec = { kind: 'output', name: 'greets', stdin: ['Ada'], expected: 'Name? Ada\nHello, Ada!\n' }
     expect((await test('n = input("Name? ")\nprint(f"Hello, {n}!")', [out])).results[0]?.passed).toBe(true)
     const bad = await test('n = input("Name? ")\nprint("Hi " + n)', [out])
-    expect(bad.results[0]?.message).toContain("Line 1 of the output should be 'Name? Hello, Ada!'")
+    expect(bad.results[0]?.message).toContain("Line 2 of the output should be 'Hello, Ada!', but it is 'Hi Ada'")
     const eof = await test('input()\ninput()', [{ kind: 'output', name: 'x', stdin: ['a'], expected: '' }])
     expect(eof.results[0]?.message).toContain('EOFError')
   })

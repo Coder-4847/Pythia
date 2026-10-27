@@ -42,7 +42,9 @@ def _input(prompt=""):
     if _scripted_input is not None:
         if not _scripted_input:
             raise EOFError("EOF when reading a line: the program asked for more input than this test provides")
-        return _scripted_input.pop(0)
+        line = _scripted_input.pop(0)
+        sys.stdout.write(line + "\n")  # echo the answer and Enter, as the console shows them
+        return line
     line = _read_line(str(prompt))
     if not isinstance(line, str):  # JS null arrives as pyodide's jsnull, not None
         if _was_cancelled():

@@ -115,7 +115,9 @@ export default {
 | Helper | Meaning |
 |---|---|
 | `call(fn, args, expected, opts?)` | call `fn(*args)` and compare the return value |
-| `output(stdin, expected, opts?)` | run the whole program with `stdin` lines for `input()` and compare everything it prints |
+| `output(stdin, expected, opts?)` | run the whole program with `stdin` lines for `input()` and compare everything it prints. Each answer is echoed on the prompt's line, followed by a newline, exactly as the console shows it |
+| `lastLine(stdin, expected, opts?)` | like `output`, but only the last non-empty line must match, so the learner's prompt wording doesn't matter. Prefer this for `input()` exercises |
+| `rerunOutput(name, swaps, expected)` / `rerunVar(name, swaps, variable, expected)` | hidden tests: re-run the learner's program with parts of the starter replaced (`[['age = 17', 'age = 18']]`) and check what it prints / what a variable holds. They catch hard-coded answers |
 | `variable(name, expected, opts?)` | after the program runs, `name` must equal `expected` |
 | `check(name, pythonCode, opts?)` | free-form Python. Sees `ns` (the learner's globals), `out` (printed text), `src` (their source), `fail(msg)`, `equal(a, b)`. A failed `assert "message"` is shown to the learner |
 
