@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { db, TABLE_NAMES, type TableName } from '@/data/db'
+import { queueClearIfPaired } from '@/sync/engine'
 import {
   achievementSchema,
   attemptSchema,
@@ -183,6 +184,8 @@ export async function previewImport(file: ExportFile, mode: ImportMode): Promise
 /** Apply an import atomically: either everything lands or nothing changes. */
 export async function applyImport(file: ExportFile, mode: ImportMode): Promise<void> {
   const tables = TABLE_NAMES.map((n) => db.table(n))
+  // Replacing wipes tables with clear(), which fires no delete hooks: queue those deletions for the cloud first.
+  if (mode === 'replace') await queueClearIfPaired(db, TABLE_NAMES)
   await db.transaction('rw', tables, async () => {
     for (const name of TABLE_NAMES) {
       const table = db.table(name)
@@ -205,6 +208,7 @@ export async function applyImport(file: ExportFile, mode: ImportMode): Promise<v
 
 /** Delete everything stored on this device. */
 export async function resetAllData(): Promise<void> {
+  await queueClearIfPaired(db, TABLE_NAMES)
   await db.transaction('rw', TABLE_NAMES.map((n) => db.table(n)), async () => {
     for (const name of TABLE_NAMES) await db.table(name).clear()
   })

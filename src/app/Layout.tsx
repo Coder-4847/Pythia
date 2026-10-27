@@ -1,11 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { START_PATH } from '@/app/paths'
 import { Logo } from '@/components/brand/Logo'
 import { buttonClass } from '@/components/ui/Button'
 import { Kbd } from '@/components/ui/Kbd'
 import { Popover } from '@/components/ui/Popover'
 import { Toaster } from '@/components/ui/Toaster'
+import { AccountMenu } from '@/features/account/AccountMenu'
+import { useCloud } from '@/sync/store'
+import { useToast } from '@/stores/toast'
 import { cn } from '@/lib/cn'
 import { scrollToId } from '@/lib/scrollTo'
 import { useTheme } from '@/stores/theme'
@@ -14,6 +17,7 @@ import { useTheme } from '@/stores/theme'
 const CommandPalette = lazy(() => import('@/features/palette/CommandPalette'))
 const ShortcutsOverlay = lazy(() => import('@/features/help/ShortcutsOverlay'))
 const AchievementWatcher = lazy(() => import('@/features/achievements/AchievementWatcher'))
+const SyncChoiceDialog = lazy(() => import('@/features/account/SyncChoiceDialog'))
 
 /** Primary navigation between the app's areas. */
 const APP_NAV = [
@@ -86,6 +90,27 @@ function MenuLinks({ items, close }: { items: readonly (readonly [string, string
   )
 }
 
+/** Sends people where they expect after an email link or OAuth redirect brings them back to the site. */
+function CloudRedirects() {
+  const navigate = useNavigate()
+  const show = useToast((s) => s.show)
+  const user = useCloud((s) => s.user)
+  const recovery = useCloud((s) => s.recovery)
+  const returned = useCloud((s) => s.returned)
+  const set = useCloud((s) => s.set)
+  useEffect(() => {
+    if (recovery) navigate('/reset', { replace: true })
+  }, [recovery, navigate])
+  useEffect(() => {
+    if (user && returned && !recovery) {
+      set({ returned: false })
+      show(`Signed in as ${user.email}`)
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, returned, recovery, navigate, set, show])
+  return null
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const onLanding = pathname === '/'
@@ -93,6 +118,9 @@ export function Layout({ children }: { children: ReactNode }) {
   const wide = pathname.startsWith('/playground') || pathname.startsWith('/lesson/')
   const [palette, setPalette] = useState(false)
   const [shortcuts, setShortcuts] = useState(false)
+  const configured = useCloud((s) => s.configured)
+  const signedIn = useCloud((s) => s.user !== null)
+  const hasChoice = useCloud((s) => s.choice !== null)
   const openPalette = useCallback(() => setPalette(true), [])
 
   useEffect(() => {
@@ -160,6 +188,7 @@ export function Layout({ children }: { children: ReactNode }) {
               <Kbd>K</Kbd>
             </button>
             <ThemeToggle />
+            <AccountMenu />
             {onLanding ? (
               <>
                 <Link to="/dashboard" className={cn(buttonClass('ghost', 'sm'), 'hidden sm:inline-flex')}>
@@ -186,6 +215,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     <MenuLinks items={APP_NAV} close={close} />
                     <hr className="my-1.5 border-line" />
                   </div>
+                  {configured && !signedIn && <MenuLinks items={[['/signin', 'Sign in']]} close={close} />}
                   <MenuLinks items={MORE_NAV} close={close} />
                   <hr className="my-1.5 border-line" />
                   <button
@@ -205,12 +235,14 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+      {configured && <CloudRedirects />}
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
       <Toaster />
       <Suspense fallback={null}>
         <AchievementWatcher />
+        {hasChoice && <SyncChoiceDialog />}
         {palette && <CommandPalette open={palette} onClose={() => setPalette(false)} />}
         {shortcuts && <ShortcutsOverlay open={shortcuts} onClose={() => setShortcuts(false)} />}
       </Suspense>

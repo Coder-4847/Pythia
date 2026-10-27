@@ -2,6 +2,48 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 8 — optional accounts and local-first sync ✅ (against a fake Supabase, not a live one)
+
+Done
+- **Works unconfigured.** Without `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` nothing account-related is downloaded or shown; the
+  auth pages explain there is no account, and the Privacy page says nothing is uploaded. Configured, the Supabase SDK is its own
+  lazily loaded chunk.
+- **Auth:** sign up, sign in, forgot / reset password, GitHub and Google OAuth, continue as guest, sign out, delete account. PKCE
+  flow (the default implicit flow returns tokens in `#…`, which the hash router would swallow). Plain-language errors; sign-in and
+  reset never reveal whether an email has an account; passwords ≥ 8 characters.
+- **Database:** `supabase/migrations/0001_records.sql`: one generic `records` table, Row Level Security on every operation, a
+  last-write-wins trigger (a stale upsert is skipped, accepted writes get a new `seq`), `delete_my_account()`. **Run against real
+  Postgres (PGlite) in unit tests**: cross-user read/write/update/delete are blocked, anon sees nothing, stale writes lose, tombstones
+  are consistent. I checked the tests are not vacuous by removing RLS and the trigger and watching them fail.
+- **Sync engine** (`src/sync/engine.ts`, injected `Remote`): Dexie v2 adds `outbox` and `meta` tables; hooks queue one entry per changed
+  record; push in batches, pull by `seq` cursor with validation (every cloud row is re-parsed with its zod schema and its key checked);
+  cloud-applied writes are muted so they don't echo back; deletes are tombstones; `reset` and replace-import are queued as deletions.
+  14 unit tests simulate two devices and an in-memory cloud: convergence, newest edit wins both ways, deletion vs newer edit, offline
+  queue, an edit made during an upload stays queued, 1 200-row paging, hostile or invalid rows dropped.
+- **First sign-in:** a device with no progress simply follows the account. A device that already has progress is asked once: combine
+  (newer wins per item), use the account's copy only, or not now (and can be turned on later from Profile).
+- **UI:** header account menu with a live sync status (synced / syncing / offline with N pending / trouble), Profile "Your account"
+  section, honest confirmation texts for reset and import when signed in.
+- **Browser tests** (`e2e/cloud.spec.ts`, 6 tests) run the real production build against `e2e/fakeSupabase.ts`, an in-memory stand-in for
+  GoTrue + the `records` table: sign-up/in errors, email-confirmation and reset messages, two-device propagation, all three first-sign-in
+  answers, offline queue then recovery, server failure then recovery, sign-out keeps local data, delete account.
+- Bug fixed on the way: a freshly auto-created default profile now has `updatedAt: 0` so it can never beat a profile the learner edited.
+
+Approximated / caveats
+- **Never run against a live Supabase project.** The SQL is tested on real Postgres and the browser client against a hand-written fake of
+  GoTrue/PostgREST; where my fake and the real services differ (response shapes, error strings, rate limits), I won't know until you try it.
+  Specifically unverified: OAuth round-trips, the confirmation / recovery email links (the PKCE `?code=` return and the
+  `PASSWORD_RECOVERY` redirect), and `delete_my_account()` on Supabase itself.
+- Last write wins by the *device's* clock; there is no live push (other devices see changes within about a minute or on "Sync now");
+  `seq` is assigned in accept order, not commit order, so a concurrent writer could in theory be skipped until that item changes again.
+- Opening an email-confirmation link on a different device confirms the address, but the learner has to sign in there.
+- Playwright's Chromium dropped a body-less `204` answer to a cross-origin POST in my fake, so the fake answers `delete_my_account` with
+  `200 null`; real PostgREST returns 204 for a void function, which browsers handle.
+- No account-recovery path if a learner loses both their password and email access (standard for Supabase; nothing custom).
+
+You need to do
+- Create the Supabase project, run the migration, set URLs and providers, add the two repository secrets: DEPLOY.md section 3.
+
 ## Phase 7 — dashboard, archive, achievements, profile, stats, settings ✅
 
 Done

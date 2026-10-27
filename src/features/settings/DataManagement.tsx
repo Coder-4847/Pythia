@@ -14,6 +14,7 @@ import {
 import { hydrateStores } from '@/data/syncStores'
 import { cn } from '@/lib/cn'
 import { useToast } from '@/stores/toast'
+import { useCloud } from '@/sync/store'
 
 const APP_VERSION = '0.1.0'
 
@@ -54,6 +55,7 @@ function PreviewTable({ rows, mode }: { rows: TablePreview[]; mode: ImportMode }
 /** Export, import (with preview) and reset: the learner's data is theirs to move or erase. */
 export function DataManagement() {
   const show = useToast((s) => s.show)
+  const signedIn = useCloud((s) => s.user !== null)
   const picker = useRef<HTMLInputElement>(null)
   const [staged, setStaged] = useState<Staged | null>(null)
   const [mode, setMode] = useState<ImportMode>('merge')
@@ -188,7 +190,7 @@ export function DataManagement() {
         onCancel={() => setConfirm(null)}
         onConfirm={() => void apply()}
       >
-        Everything on this device that isn’t in the file will be removed. This can’t be undone.
+        Everything on this device that isn’t in the file will be removed. This can’t be undone.{signedIn && ' It will also be removed from your account the next time you sync.'}
       </ConfirmDialog>
       <ConfirmDialog
         open={confirm === 'reset'}
@@ -198,7 +200,7 @@ export function DataManagement() {
         onCancel={() => setConfirm(null)}
         onConfirm={() => void reset()}
       >
-        Your progress, saved code, snippets and settings will be erased. This can’t be undone.
+        Your progress, saved code, snippets and settings will be erased. This can’t be undone.{signedIn && ' Because you’re signed in, your cloud copy is deleted too, so other devices will lose it as well.'}
       </ConfirmDialog>
     </section>
   )

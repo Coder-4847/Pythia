@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { AccountSection } from '@/features/account/AccountSection'
 import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/Progress'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { updateProfile } from '@/data/repo'
 import { useProfile } from '@/data/hooks'
 import { useStats } from '@/data/useStats'
+import { useCloud } from '@/sync/store'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export const GOAL_CHOICES = [20, 40, 60, 100] as const
@@ -70,6 +71,7 @@ export function ProfileFields() {
 export default function ProfilePage() {
   useDocumentTitle('Profile')
   const data = useStats()
+  const signedIn = useCloud((s) => s.user !== null)
   if (!data)
     return (
       <PageShell eyebrow="Profile" title="Profile">
@@ -78,7 +80,7 @@ export default function ProfilePage() {
     )
   const { stats, displayName } = data
   return (
-    <PageShell eyebrow="Profile" title={displayName} subtitle="Your progress lives in this browser. Nothing here is shared with anyone.">
+    <PageShell eyebrow="Profile" title={displayName} subtitle={signedIn ? 'Your progress is saved on this device and synced to your account.' : 'Your progress lives in this browser. Nothing here is shared with anyone.'}>
       <div className="rounded-2xl border border-line bg-surface p-6">
         <div className="flex items-baseline justify-between gap-4">
           <p className="font-serif text-3xl">Level {stats.level.level}</p>
@@ -105,18 +107,7 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      <section className="mt-10 rounded-2xl border border-line bg-surface p-6" aria-labelledby="guest">
-        <h2 id="guest" className="font-serif text-2xl">
-          You’re learning as a guest
-        </h2>
-        <p className="mt-2 max-w-2xl text-muted">
-          There’s no account: everything is saved on this device. To move to another browser or keep a backup, use{' '}
-          <Link to="/settings" className="text-gold underline-offset-4 hover:underline">
-            export in Settings
-          </Link>
-          . Optional cloud accounts are on the roadmap.
-        </p>
-      </section>
+      <AccountSection />
     </PageShell>
   )
 }

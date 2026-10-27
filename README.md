@@ -33,7 +33,7 @@ Without them the app runs in guest, local-only mode.
 | `npm run build` | `tsc -b` then production build (set `BASE_PATH=/repo/` for Pages) |
 | `npm run preview` | Serve `dist/` (use the same `BASE_PATH`) |
 | `npm test` | Vitest unit tests |
-| `npm run e2e` | Playwright smoke tests |
+| `npm run e2e` | Playwright tests (guest build on :4173, plus a build wired to a fake Supabase on :4174) |
 | `npm run brand` | Regenerate PNG icons and the OG image from the SVG mark |
 
 ## Stack

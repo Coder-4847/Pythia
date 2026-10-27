@@ -27,6 +27,16 @@ test('every page renders, without console errors', async ({ page }) => {
   expect(errors).toEqual([])
 })
 
+test('without accounts configured, the site is guest-only and says so', async ({ page }) => {
+  await page.goto('/#/signin')
+  await expect(page.getByRole('heading', { level: 1, name: 'No account needed' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sign in' })).toHaveCount(0)
+  await page.goto('/#/profile')
+  await expect(page.getByText(/accounts aren’t switched on/)).toBeVisible()
+  await page.goto('/#/privacy')
+  await expect(page.getByText(/not switched on for this copy/)).toBeVisible()
+})
+
 test('a new learner sees an inviting empty dashboard and archive', async ({ page }) => {
   await page.goto('/#/dashboard')
   await expect(page.getByText(/Your first lesson takes about eight minutes/)).toBeVisible()

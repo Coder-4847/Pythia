@@ -7,7 +7,7 @@ without the AI layer (Pythia falls back to its local checks) and without cloud s
 |---|---|---|
 | The site | yes | GitHub Pages |
 | AI layer (Pythia asks smarter questions) | optional | Cloudflare Worker (holds your Anthropic key) |
-| Accounts and sync | optional | Supabase (added in a later phase; see STATUS.md) |
+| Accounts and sync | optional | Supabase (auth + one table with Row Level Security) |
 
 ---
 
@@ -30,6 +30,8 @@ public bundle, so none of them may be secret; the names say "secrets" because th
 | Name | Value |
 |---|---|
 | `VITE_AI_PROXY_URL` | the Worker URL from section 2, no trailing slash |
+| `VITE_SUPABASE_URL` | the project URL from section 3, like `https://abcd1234.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | the project's `anon` public key from section 3 |
 
 Leave unset to build in local-only mode.
 
@@ -113,3 +115,64 @@ characters of code and asks for a short answer.
   spend limit in the Anthropic console as the final backstop.
 - Learners' code is sent to Anthropic when the AI layer is on. The app lets them switch it off at any time
   (Pythia's status bar → intensity menu → AI layer), and the privacy page says so.
+
+---
+
+## 3. Accounts and sync (Supabase)
+
+Accounts are optional. Without them the app is guest-only and loads none of the account code. With
+them, a learner can sign in (email + password, GitHub or Google) and their progress follows them to
+other devices. IndexedDB in the browser stays the source of truth; Supabase is a mirror.
+
+### Create the project
+
+1. Create a project at [supabase.com](https://supabase.com) (the free tier is plenty).
+2. **SQL editor → New query**, paste the whole of `supabase/migrations/0001_records.sql`, **Run**. It creates
+   one table (`records`), turns on Row Level Security so each signed-in user can only touch their own rows,
+   adds the last-write-wins trigger, and adds `delete_my_account()` (used by the profile page's "Delete
+   account" button). The migration is exercised against a real Postgres (PGlite) in `src/sync/migration.test.ts`.
+3. **Authentication → URL configuration**
+   - **Site URL**: your deployed site, with its base path, e.g. `https://<owner>.github.io/<repo>/`.
+   - **Redirect URLs**: add the same URL, and `http://localhost:5173/` for development. The app returns to
+     the site root after OAuth, email confirmation and password recovery, then routes the learner itself.
+4. **Authentication → Sign In / Providers**
+   - **Email** is on by default. Set the minimum password length to 8 to match the app. Leave "Confirm email" on
+     (recommended); the app handles both settings.
+   - **GitHub** / **Google** (optional): create an OAuth app with each provider, paste its client id and secret,
+     and register the callback URL Supabase shows (`https://<ref>.supabase.co/auth/v1/callback`). An unconfigured
+     provider shows the learner "That sign-in method isn't turned on for this site".
+5. **Project settings → API**: copy the **Project URL** and the **anon public** key.
+
+### Connect the site
+
+- Production: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as repository secrets (section 1) and redeploy.
+- Development: put both in `.env.local`.
+
+The anon key is public by design. What protects data is Row Level Security, not the key's secrecy. **Never** put
+the `service_role` key in the app or in a `VITE_` variable.
+
+### What syncs, and how
+
+Everything a learner creates (progress, attempts with their code, quiz results, drafts, snippets, playground
+files, achievements, name, goal, settings) is one row per item in `records`. Each browser keeps an outbox of
+changes and uploads them after a short pause, when it comes back online, when the tab is shown again and
+every minute; it downloads whatever has a newer server sequence number than the last time. For an item that
+exists in both places, the newer `updatedAt` wins, and deletions travel as tombstones. The first time a device
+that already holds progress signs in, the learner chooses to combine, to take the account's copy, or to wait.
+
+### Honest limits
+
+- **Last write wins by the device's clock.** A device with a badly wrong clock can overwrite or lose to
+  another. Items are small and independent, so the damage is one item, never the whole account.
+- **No live push.** Another device's change appears within about a minute (or at "Sync now"), not instantly.
+- **Concurrent writers can skip a row in a pull.** The server numbers writes in the order they are accepted, not
+  committed; two devices writing in the same instant could in theory make a third skip one until that item is
+  changed again. It is cheap to repair with "Sync now" after a reset, and unlikely for a single learner.
+- **Email limits.** Supabase's built-in mailer allows only a few messages per hour. For a real launch, configure
+  custom SMTP (Authentication → SMTP Settings).
+- **Opening a confirmation link on another device** confirms the email, but the learner then has to sign in
+  there (the sign-in code from the link is tied to the browser that asked for it).
+- Whoever administers the database can read what is stored. The privacy page says so.
+- `delete_my_account()` removes the auth user and, through the foreign key, every row. It has been tested
+  against Postgres in the unit tests and against a fake Supabase in the browser tests, but not against a live
+  Supabase project.

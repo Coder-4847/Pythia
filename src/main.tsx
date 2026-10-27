@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from '@/app/App'
 import { hydrateStores, startWriteThrough } from '@/data/syncStores'
+import { isCloudConfigured } from '@/sync/config'
 import { initTheme } from '@/stores/theme'
 import '@/styles/index.css'
 
@@ -10,7 +11,11 @@ initTheme()
 // (some private modes) the app still works; it just doesn't remember anything.
 hydrateStores()
   .catch((e) => console.warn('Could not load saved data:', e))
-  .finally(startWriteThrough)
+  .finally(() => {
+    startWriteThrough()
+    // Accounts are optional: when unconfigured, none of the cloud code is even downloaded.
+    if (isCloudConfigured) void import('@/sync/manager').then((m) => m.startCloud()).catch((e) => console.warn('Cloud sync unavailable:', e))
+  })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

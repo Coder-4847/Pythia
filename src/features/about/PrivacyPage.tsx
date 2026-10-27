@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PageShell } from '@/components/ui/PageShell'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { isCloudConfigured } from '@/sync/config'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -47,7 +48,23 @@ export default function PrivacyPage() {
       </Section>
 
       <Section title="Accounts">
-        <p>Optional cloud accounts to sync between devices are not available yet. When they are, this page will say exactly what they store before you can create one.</p>
+        {isCloudConfigured ? (
+          <>
+            <p>
+              Accounts are optional and only add syncing between your devices. If you create one, we store your <strong className="text-fg">email address</strong> and a salted hash of your password (or, if you sign in with GitHub or Google, the email that provider shares). The
+              account system is Supabase; the site’s owner runs the database.
+            </p>
+            <p>
+              Once you’re signed in and have chosen to sync, a copy of your learning data is uploaded and kept up to date: lesson progress, every exercise attempt <em>including the code you wrote</em>, quiz results, drafts, snippets, playground files, achievements, your display name, daily goal and settings.
+              Each row is protected by database rules so that only your own account can read or change it. Whoever administers the database could still technically read it, which is why nothing beyond that list is ever uploaded and you shouldn’t put secrets in your code.
+            </p>
+            <p>
+              Sign out and nothing more is uploaded. <Link to="/profile" className="text-gold hover:underline">Delete account</Link> on the profile page erases your account and all cloud data immediately. Your data on this device is never touched by either.
+            </p>
+          </>
+        ) : (
+          <p>Optional cloud accounts are not switched on for this copy of Pythia, so nothing is ever uploaded and there is nothing to sign in to.</p>
+        )}
       </Section>
     </PageShell>
   )

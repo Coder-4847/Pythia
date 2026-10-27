@@ -20,7 +20,8 @@ const uid = () => crypto.randomUUID()
 export async function getProfile(): Promise<Profile> {
   const existing = await db.profile.get('me')
   if (existing) return existing
-  const profile: Profile = { ...DEFAULT_PROFILE, createdAt: now(), updatedAt: now() }
+  // updatedAt 0: an untouched default must never win a sync against a profile the learner actually edited.
+  const profile: Profile = { ...DEFAULT_PROFILE, createdAt: now(), updatedAt: 0 }
   await db.profile.put(profile)
   return profile
 }

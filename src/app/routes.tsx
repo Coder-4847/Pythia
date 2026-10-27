@@ -21,6 +21,7 @@ const Stats = lazy(() => import('@/features/stats/StatsPage'))
 const About = lazy(() => import('@/features/about/AboutPage'))
 const Privacy = lazy(() => import('@/features/about/PrivacyPage'))
 const Changelog = lazy(() => import('@/features/about/ChangelogPage'))
+const Auth = lazy(() => import('@/features/auth/AuthPage'))
 const Settings = lazy(() => import('@/features/settings/SettingsPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
@@ -59,6 +60,10 @@ export function AppRoutes() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/signin" element={<Auth mode="signin" />} />
+              <Route path="/signup" element={<Auth mode="signup" />} />
+              <Route path="/forgot" element={<Auth mode="forgot" />} />
+              <Route path="/reset" element={<Auth mode="reset" />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/changelog" element={<Changelog />} />

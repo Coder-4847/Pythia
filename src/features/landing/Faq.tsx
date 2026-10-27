@@ -4,8 +4,8 @@ import { SectionHeading } from '@/features/landing/SectionHeading'
 import { cn } from '@/lib/cn'
 
 const ITEMS = [
-  ['Is Pythia free?', 'Yes. The learning experience is free, and guest mode is fully featured. You can create an account later to sync progress across devices.'],
-  ['Do I need an account?', 'No. Open the site and start coding. Your progress is saved in your browser; sign in only if you want it on more than one device.'],
+  ['Is Pythia free?', 'Yes. The learning experience is free, and guest mode is fully featured. Where accounts are switched on, you can create one later to sync progress across devices.'],
+  ['Do I need an account?', 'No. Open the site and start coding. Your progress is saved in your browser; where accounts are available, sign in only if you want it on more than one device.'],
   ['Does Pythia just give me the answer?', 'Never by default. Pythia asks guiding questions, then offers a ladder of hints. The full explanation only appears if you click “I’m stuck”.'],
   ['Does my code leave my browser?', 'Python runs in a Web Worker on your machine. The instant checks are local too. If the optional AI layer is on, a snippet is sent to our proxy for analysis when you pause typing; switch it off in Settings for local-only mode.'],
   ['Which Python is this?', 'CPython compiled to WebAssembly via Pyodide, with NumPy, pandas, matplotlib and scikit-learn available, and micropip for pure-Python packages.'],
