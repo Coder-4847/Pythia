@@ -28,6 +28,7 @@ export function ExampleStep({ example }: { example: Lesson['example'] }) {
           onReset={undefined}
           stdin={stdin}
           onStdinChange={setStdin}
+          goal={example.title}
         />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { LogoMark } from '@/components/brand/Logo'
 import { useRuntimeState } from '@/features/runtime/runtime'
 import type { ConsoleEntry } from '@/features/runtime/useRunner'
 import { cn } from '@/lib/cn'
@@ -91,6 +92,16 @@ export function Console({ entries, running, prompt, onSubmitInput, onClear, stdi
         {entries.map((entry) => {
           if (entry.kind === 'image')
             return <img key={entry.id} src={`data:image/png;base64,${entry.png}`} alt="Plot produced by your program" className="my-2 max-w-full rounded-lg bg-white" />
+          if (entry.kind === 'pythia')
+            return (
+              <div key={entry.id} className="my-2 whitespace-normal rounded-lg border border-gold/40 bg-gold/5 px-3 py-2.5 font-sans text-[14px] leading-snug">
+                <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-gold">
+                  <LogoMark size={14} /> In plain English
+                </p>
+                <p className="mt-1.5 text-fg">{entry.headline}</p>
+                <p className="mt-1 text-muted">{entry.question}</p>
+              </div>
+            )
           if (entry.kind === 'error')
             return (
               <div key={entry.id} className="my-2 rounded-lg border border-bad/40 bg-bad/10 px-3 py-2 text-bad">

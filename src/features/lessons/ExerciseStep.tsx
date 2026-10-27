@@ -126,6 +126,8 @@ export function ExerciseStep({ lesson, exercise, attempts, onChecked }: Props) {
             onReset={() => setConfirmReset(true)}
             stdin={stdin}
             onStdinChange={setStdin}
+            goal={`${exercise.title}. ${exercise.prompt}`.slice(0, 500)}
+            onHelp={(rung) => setHintLevel((level) => Math.max(level, rung))}
           />
         )}
       </div>

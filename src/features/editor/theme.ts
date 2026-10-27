@@ -39,6 +39,18 @@ export const pythiaTheme = EditorView.theme({
   '.cm-completionIcon': { opacity: '0.5' },
   '.cm-panels': { backgroundColor: 'var(--c-raised)', color: 'var(--c-fg)', borderColor: 'var(--c-line)' },
   '.cm-textfield': { backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-line-strong)', color: 'var(--c-fg)' },
+  '.cm-pythia-gutter': { width: '18px' },
+  '.cm-pythia-gutter .cm-gutterElement': { cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  '.cm-pythia-dot': {
+    display: 'block',
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    background: 'var(--c-gold)',
+    animation: 'pulse-soft 1.6s ease-in-out infinite',
+  },
+  '.cm-pythia-spacer': { display: 'block', width: '8px', height: '8px' },
+  '.cm-pythia-line': { backgroundColor: 'color-mix(in srgb, var(--c-gold) 8%, transparent)' },
   '.cm-button': { backgroundImage: 'none', backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-line-strong)', color: 'var(--c-fg)' },
 })
 

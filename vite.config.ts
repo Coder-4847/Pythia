@@ -48,6 +48,6 @@ export default defineConfig(({ mode }) => ({
   build: { target: 'es2022', sourcemap: mode !== 'production' },
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'worker/src/**/*.test.ts'],
   },
 }))

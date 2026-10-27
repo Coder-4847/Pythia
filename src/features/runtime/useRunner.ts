@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { translateError } from '@/features/pythia/translateError'
 import { runtime, useRuntimeState } from '@/features/runtime/runtime'
 import type { RunResult, SourceFile, TestReport, TestSpec } from '@/workers/protocol'
 
 export type ConsoleEntry =
   | { id: number; kind: 'stdout' | 'stderr' | 'stdin' | 'status' | 'info' | 'error'; text: string }
   | { id: number; kind: 'image'; png: string }
+  /** Pythia's plain-English reading of an error, shown under the raw traceback. */
+  | { id: number; kind: 'pythia'; headline: string; question: string }
 
 /** Past this many characters, further program output is dropped (a runaway print loop must not freeze the tab). */
 const MAX_OUTPUT_CHARS = 200_000
 
-type TextKind = Exclude<ConsoleEntry['kind'], 'image'>
-type Pending = { kind: TextKind; text: string } | { kind: 'image'; png: string }
+type TextKind = Exclude<ConsoleEntry['kind'], 'image' | 'pythia'>
+type Pending = { kind: TextKind; text: string } | { kind: 'image'; png: string } | { kind: 'pythia'; headline: string; question: string }
 
 /**
  * Drives one console: runs programs on the shared Python runtime, streams output
@@ -41,6 +44,8 @@ export function useRunner() {
         const last = next[next.length - 1]
         if (item.kind === 'image') {
           next.push({ id: nextId.current++, kind: 'image', png: item.png })
+        } else if (item.kind === 'pythia') {
+          next.push({ id: nextId.current++, kind: 'pythia', headline: item.headline, question: item.question })
         } else if (last && last.kind === item.kind && (item.kind === 'stdout' || item.kind === 'stderr')) {
           next[next.length - 1] = { ...last, text: last.text + item.text }
         } else {
@@ -100,6 +105,8 @@ export function useRunner() {
               ? { kind: 'info', text: 'Stopped.' }
               : { kind: 'error', text: result.error.traceback || `${result.error.type}: ${result.error.message}` },
           )
+          const reading = translateError(result.error)
+          if (reading) push({ kind: 'pythia', ...reading })
         }
         setLastResult(result)
         return result

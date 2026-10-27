@@ -49,6 +49,9 @@ async function init(baseUrl: string, buffers: SharedBuffers | null) {
     }
     const py = await loadPyodide({ indexURL: baseUrl })
     if (shared) py.setInterruptBuffer(new Uint8Array(shared.interrupt))
+    const wheel = await fetch(`${import.meta.env.BASE_URL}vendor/pyflakes-4.0.3-py2.py3-none-any.whl`)
+      .then((r) => (r.ok ? r.arrayBuffer() : undefined))
+      .catch(() => undefined) // offline or blocked: analysis falls back to Pythia's own rules
     engine = await createEngine(py, {
       stdout: (text) => send({ type: 'stdout', id: currentId, text }),
       stderr: (text) => send({ type: 'stderr', id: currentId, text }),
@@ -56,7 +59,7 @@ async function init(baseUrl: string, buffers: SharedBuffers | null) {
       status: (text) => send({ type: 'status', id: currentId, text }),
       readLine,
       wasCancelled: () => cancelled,
-    })
+    }, wheel)
     send({ type: 'ready', python: py.runPython('import sys; sys.version.split()[0]') as string })
   } catch (e) {
     send({ type: 'init-error', message: e instanceof Error ? e.message : String(e) })
@@ -74,6 +77,8 @@ self.onmessage = async (event: MessageEvent<ToWorker>) => {
     stdinQueue = [...msg.stdinLines]
     const result = await engine.run(msg.files, msg.main)
     send({ type: 'done', id: msg.id, result })
+  } else if (msg.type === 'analyze') {
+    send({ type: 'analysis', id: msg.id, diagnostics: engine.analyze(msg.code) })
   } else if (msg.type === 'test') {
     if (shared) new Uint8Array(shared.interrupt)[0] = 0
     const report = await engine.runTests(msg.files, msg.main, msg.tests)

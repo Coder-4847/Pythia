@@ -1,0 +1,23 @@
+# Cloudflare Worker: Pythia's AI proxy. Deploy steps are in /DEPLOY.md.
+name = "pythia-ai-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Which Claude model answers. Any Claude 5.x model ID works; see DEPLOY.md for the cost trade-off.
+MODEL = "claude-haiku-5-5"
+# Comma-separated list of origins allowed to call the proxy (no trailing slash). Add your Pages URL.
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:4173"
+# Per-IP limits. The per-minute limit also protects you from a runaway client; the daily cap bounds spend.
+RATE_LIMIT_PER_MIN = "12"
+RATE_LIMIT_PER_DAY = "300"
+
+# Optional but recommended: a KV namespace shared by all Worker instances for rate limiting.
+# Create it with `npx wrangler kv namespace create RATE` and paste the id here, then uncomment.
+# Without it the proxy still limits per Worker instance, which is best-effort only.
+# [[kv_namespaces]]
+# binding = "RATE"
+# id = "<your-kv-namespace-id>"
+
+# The Anthropic key is a SECRET, never put it in this file:
+#   npx wrangler secret put ANTHROPIC_API_KEY

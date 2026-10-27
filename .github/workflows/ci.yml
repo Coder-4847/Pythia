@@ -16,6 +16,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Type-check the AI proxy Worker
+        run: npm --prefix worker ci && npm --prefix worker run typecheck
       - run: npm run typecheck
       - run: npm test
       - run: npm run build

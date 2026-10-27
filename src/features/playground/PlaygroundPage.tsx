@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Popover } from '@/components/ui/Popover'
 import { SNIPPETS } from '@/content/snippets'
-import { CodeEditor } from '@/features/editor/CodeEditor'
+import { PythiaEditor } from '@/features/pythia/PythiaEditor'
 import { FileTabs } from '@/features/playground/FileTabs'
 import { decodeShare, encodeShare } from '@/features/playground/share'
 import { usePlayground } from '@/features/playground/store'
@@ -176,7 +176,7 @@ export default function PlaygroundPage() {
       </div>
 
       <div className="grid min-h-0 flex-1 grid-rows-[3fr_2fr] lg:grid-cols-[1.15fr_1fr] lg:grid-rows-1">
-        <CodeEditor
+        <PythiaEditor
           docKey={String(active.id)}
           initialValue={active.code}
           onChange={(code) => setCode(active.id, code)}
@@ -184,6 +184,7 @@ export default function PlaygroundPage() {
           fontSize={editorFontSize}
           keybindings={keybindings}
           ariaLabel={`Python code, ${active.name}`}
+          lastError={runner.lastResult?.error ?? null}
           className="border-b border-line lg:border-b-0 lg:border-r"
         />
         <Console

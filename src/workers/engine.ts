@@ -1,6 +1,7 @@
 import type { PyodideInterface } from 'pyodide'
+import analyzeSource from '@/workers/pythia_analyze.py?raw'
 import runtimeSource from '@/workers/pythia_runtime.py?raw'
-import type { RunResult, SourceFile, TestReport, TestSpec } from '@/workers/protocol'
+import type { Diagnostic, RunResult, SourceFile, TestReport, TestSpec } from '@/workers/protocol'
 
 /** What the engine needs from its environment (the worker, or a test). */
 export interface EngineHost {
@@ -17,6 +18,8 @@ export interface EngineHost {
 export interface Engine {
   run: (files: SourceFile[], main: string) => Promise<RunResult>
   runTests: (files: SourceFile[], main: string, tests: TestSpec[]) => Promise<TestReport>
+  /** Local bug prediction: syntax, pyflakes and beginner-trap rules. Never runs the code. */
+  analyze: (code: string) => Diagnostic[]
   install: (packages: string[]) => Promise<{ ok: boolean; message: string }>
 }
 
@@ -27,7 +30,12 @@ type PyRuntimeModule = {
 }
 
 /** Wrap Pyodide with Pythia's run/stream/plot/input behaviour. Pure logic, no worker globals. */
-export async function createEngine(py: PyodideInterface, host: EngineHost): Promise<Engine> {
+export async function createEngine(
+  py: PyodideInterface,
+  host: EngineHost,
+  /** The pyflakes wheel, if it could be fetched. Without it, analysis still runs its own rules. */
+  pyflakesWheel?: ArrayBuffer | Uint8Array,
+): Promise<Engine> {
   const decoder = (sink: (t: string) => void) => {
     const d = new TextDecoder()
     return {
@@ -43,7 +51,11 @@ export async function createEngine(py: PyodideInterface, host: EngineHost): Prom
 
   py.FS.writeFile('/pythia_runtime.py', runtimeSource)
   py.runPython("import sys; sys.path.insert(0, '/')")
+  // Copy into a plain Uint8Array: Pyodide rejects subclasses such as Node's Buffer.
+  if (pyflakesWheel) py.unpackArchive(new Uint8Array(pyflakesWheel as ArrayBuffer), 'wheel')
+  py.FS.writeFile('/pythia_analyze.py', analyzeSource)
   const runtime = py.pyimport('pythia_runtime') as unknown as PyRuntimeModule
+  const analyzer = py.pyimport('pythia_analyze') as unknown as { analyze: (code: string) => string }
   runtime.configure(
     (prompt: string) => host.readLine(prompt),
     () => host.wasCancelled(),
@@ -71,6 +83,10 @@ export async function createEngine(py: PyodideInterface, host: EngineHost): Prom
       await loadImports([...files.map((f) => f.code), ...tests.flatMap((t) => (t.kind === 'check' ? [t.code] : []))])
       const filesJson = JSON.stringify(Object.fromEntries(files.map((f) => [f.name, f.code])))
       return JSON.parse(runtime.run_tests(filesJson, main, JSON.stringify(tests))) as TestReport
+    },
+
+    analyze(code) {
+      return JSON.parse(analyzer.analyze(code)) as Diagnostic[]
     },
 
     async install(packages) {

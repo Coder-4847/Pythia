@@ -3,6 +3,7 @@ import {
   INPUT_CANCELLED,
   INPUT_MAX_BYTES,
   INPUT_READY,
+  type Diagnostic,
   type FromWorker,
   type RunResult,
   type SharedBuffers,
@@ -69,6 +70,7 @@ class PythonRuntime {
   private run: InFlight | null = null
   private installs = new Map<number, (r: { ok: boolean; message: string }) => void>()
   private stopTimer: ReturnType<typeof setTimeout> | null = null
+  private analyses = new Map<number, (d: Diagnostic[] | null) => void>()
 
   /** Start loading Python (idempotent). Resolves when `run` can be called. */
   ensureReady(): Promise<void> {
@@ -144,6 +146,10 @@ class PythonRuntime {
           run.resolveTests(msg.report)
         }
         break
+      case 'analysis':
+        this.analyses.get(msg.id)?.(msg.diagnostics)
+        this.analyses.delete(msg.id)
+        break
       case 'install-done':
         this.installs.get(msg.id)?.({ ok: msg.ok, message: msg.message })
         this.installs.delete(msg.id)
@@ -175,6 +181,19 @@ class PythonRuntime {
         resolveTests: resolve,
       }
       this.post({ type: 'test', id, files, main, tests })
+    })
+  }
+
+  /**
+   * Local bug prediction for `code`, without running it. Resolves `null` when Python isn't ready
+   * or is busy running a program; the caller simply tries again after the next edit.
+   */
+  analyzeCode(code: string): Promise<Diagnostic[] | null> {
+    if (useRuntimeState.getState().status !== 'ready' || this.run || !this.worker) return Promise.resolve(null)
+    const id = this.nextId++
+    return new Promise((resolve) => {
+      this.analyses.set(id, resolve)
+      this.post({ type: 'analyze', id, code })
     })
   }
 
@@ -216,6 +235,8 @@ class PythonRuntime {
     this.run = null
     for (const resolve of this.installs.values()) resolve({ ok: false, message: 'Python was restarted' })
     this.installs.clear()
+    for (const resolve of this.analyses.values()) resolve(null)
+    this.analyses.clear()
     run?.resolve(STOPPED)
     void this.ensureReady().catch(() => {})
   }

@@ -14,6 +14,8 @@ import {
 } from '@codemirror/view'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { pythiaHighlight, pythiaTheme } from '@/features/editor/theme'
+import { pythiaExtension, setDiagnostics, type PythiaHandlers } from '@/features/pythia/editorExtension'
+import type { Diagnostic } from '@/workers/protocol'
 import { pythonSnippets } from '@/features/editor/pythonSnippets'
 import { cn } from '@/lib/cn'
 import type { Keybindings } from '@/stores/settings'
@@ -30,6 +32,9 @@ interface CodeEditorProps {
   fontSize: number
   keybindings: Keybindings
   readOnly?: boolean
+  /** What Pythia noticed: drawn as gutter dots and tinted lines. */
+  diagnostics?: Diagnostic[]
+  pythiaHandlers?: PythiaHandlers
   ariaLabel: string
   className?: string
 }
@@ -56,6 +61,8 @@ export function CodeEditor({
   fontSize,
   keybindings,
   readOnly = false,
+  diagnostics,
+  pythiaHandlers,
   ariaLabel,
   className,
 }: CodeEditorProps) {
@@ -65,9 +72,9 @@ export function CodeEditor({
   const currentKey = useRef(docKey)
   const compartments = useRef({ font: new Compartment(), keys: new Compartment(), readOnly: new Compartment() })
   // Latest callbacks/settings without rebuilding the editor on every render.
-  const latest = useRef({ onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel })
+  const latest = useRef({ onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel, pythiaHandlers })
   useLayoutEffect(() => {
-    latest.current = { onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel }
+    latest.current = { onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel, pythiaHandlers }
   })
   const keysLoaded = useRef<{ kind: Keybindings; ext: Extension }>({ kind: 'default', ext: [] })
 
@@ -96,6 +103,7 @@ export function CodeEditor({
             },
           ]),
         ),
+        pythiaExtension(() => latest.current.pythiaHandlers),
         lineNumbers(),
         highlightActiveLineGutter(),
         history(),
@@ -156,6 +164,11 @@ export function CodeEditor({
   useEffect(() => {
     view.current?.dispatch({ effects: compartments.current.font.reconfigure(fontTheme(fontSize)) })
   }, [fontSize])
+
+  // Show Pythia's diagnostics; re-applied after a tab switch because each tab has its own editor state.
+  useEffect(() => {
+    view.current?.dispatch({ effects: setDiagnostics.of(diagnostics ?? []) })
+  }, [diagnostics, docKey])
 
   useEffect(() => {
     view.current?.dispatch({ effects: compartments.current.readOnly.reconfigure(EditorState.readOnly.of(readOnly)) })

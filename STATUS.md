@@ -2,6 +2,56 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 6 — Pythia: local analysis, presentation, AI proxy ✅
+
+Done
+- **Local analysis** (`src/workers/pythia_analyze.py`, runs in the Pyodide worker, offline): `compile()`-level syntax errors
+  translated into questions (9 patterns plus a fallback), **pyflakes** (vendored wheel, unpacked straight into Pyodide, no
+  micropip or network needed) for undefined names, local-before-assignment, unused variables/imports and redefinitions, and
+  **~20 beginner-trap rules**: off-by-one (`range(1, 10)` beside "1 to 10", `range(len(x) + 1)`, `x[i + 1]`,
+  `while i <= len(x)`), `=` vs `==`, `is` with literals, a comparison used as a statement, mutating a list while looping,
+  missing return, using the result of a function that returns nothing, wrong argument count, mutable default arguments,
+  `/` where a whole number is needed, `//` in averages, divide by zero, shadowed built-ins, unreachable code,
+  `input()` text used as a number, text + number, `x = x.append()`, a method named but not called, a discarded
+  string-method result, an unused expression, loops that can never end.
+- Every diagnostic carries a **question** (always ends in `?`), a concrete **hint** and a full **explanation**, plus a level
+  (1 certain crash, 2 likely bug, 3 tidiness). **Quiet / Balanced / Chatty** show level 1 / ≤2 / ≤3.
+- **Presentation**: a softly pulsing gutter dot and tinted line (they move with the text as you type), a card on hover,
+  click or `Ctrl/⌘ + .`, ladder inside the card (question → hint → "I'm stuck"), "Not now", a live-region announcement for
+  screen readers, and a status bar with the intensity menu and AI switch. In exercises, revealing a hint or the explanation
+  counts toward the exercise's hint level (XP, never streak).
+- **Error translation**: after a crash the console shows the raw traceback plus "In plain English": a headline and a guiding
+  question for 25 families of errors (NameError, TypeError variants, IndexError, KeyError, ValueError, ZeroDivisionError,
+  RecursionError, ModuleNotFoundError, EOFError, syntax and indentation errors, and more). Deterministic and offline.
+- **AI layer**: the browser asks only when local checks found nothing for this exact code, after ~1.5 s idle, at most once per
+  8 s and 20 times per 10 minutes, with an LRU cache by code+goal hash, abort on new typing, a 60 s silent back-off after any
+  failure, and answers validated with zod (only questions with confidence ≥ 0.6 are shown; anything containing a code fence or
+  no question mark is dropped). Without a proxy URL it never calls out.
+- **Cloudflare Worker** (`worker/`): holds the Anthropic key as a secret, official `@anthropic-ai/sdk` streaming, SSE out,
+  Origin allow-list, body/field size limits, per-IP per-minute and per-day limits (KV, with an in-memory fallback), upstream
+  errors never forwarded, aborts the upstream call when the client disconnects, model name configurable (`MODEL`).
+  `wrangler.toml` and `DEPLOY.md` (Pages + Worker) written.
+- Tests: 228 analysis cases against real Pyodide (47 "should flag", 34 "must stay quiet", and a false-positive sweep over every
+  lesson solution and worked example), 27 error-translation, 36 AI-client, Worker tests (validation, prompt-injection defanging, CORS, rate limits, upstream errors, streaming, abort), and 6 Playwright tests in a real browser.
+
+Fixed along the way
+- The gutter's invisible spacer was drawn as a dot too (caught by the e2e test counting dots).
+- A hover card could vanish while the learner was reading it; it now pins on any interaction.
+
+Approximated / caveats
+- **The live AI call is untested.** I have no Anthropic key or network path to the API here. The Worker is tested with a fake
+  streaming function and typechecks against the real SDK types; the request shape (`messages.stream`, `output_config.effort`)
+  follows the SDK docs. The prompt, its tuning, and the real model's answers have never been run. Expect to adjust.
+- **Default model is `claude-haiku-5-5`**, chosen by me for cost (Pythia may ask on every pause). It is one line in
+  `worker/wrangler.toml`; sharper questions need a bigger model. This is your decision to make.
+- Heuristic rules can be wrong. The sweep shows they stay quiet on all 28 lessons' correct code and the 34 near-miss
+  examples, but real learners will write code I haven't seen. Level-2 rules are the most likely to misfire.
+- Local analysis needs Python loaded, so for the first seconds after opening a page nothing is flagged. It also skips while a
+  program is running.
+- The `range-last` rule works from text in the program ("1 to 10"). Otherwise the AI layer is what notices intent mismatches.
+- The AI proxy's rate limiting is a spend guard, not exact (see DEPLOY.md).
+- Pythia is not attached to the small runnable snippets inside lesson text (by design, to keep lessons light).
+
 ## Phase 5 — Tracks 1 and 2 content ✅
 
 Done

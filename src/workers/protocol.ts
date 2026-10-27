@@ -19,6 +19,26 @@ export interface RunResult {
   durationMs: number
 }
 
+/** One thing Pythia noticed in the learner's code. Never contains the fix, only questions and graded help. */
+export interface Diagnostic {
+  /** Stable for the same rule on the same line, so UI state (revealed hints) survives re-analysis. */
+  id: string
+  rule: string
+  /** 1-based line. */
+  line: number
+  col: number
+  /** 1 essential (a certain crash) · 2 helpful (a likely bug) · 3 chatty (tidiness). */
+  level: 1 | 2 | 3
+  category: 'syntax' | 'name' | 'type' | 'logic' | 'style'
+  /** The guiding question: what Pythia shows first. */
+  question: string
+  /** A concrete pointer, revealed on request. */
+  hint: string
+  /** The full explanation, revealed only on "I'm stuck". */
+  explanation: string
+  source: 'local' | 'ai'
+}
+
 /** One lesson test, as plain JSON the Python test runner interprets. */
 export type TestSpec = {
   name: string
@@ -64,6 +84,7 @@ export type ToWorker =
   | { type: 'init'; baseUrl: string; shared: SharedBuffers | null }
   | { type: 'run'; id: number; files: SourceFile[]; main: string; stdinLines: string[] }
   | { type: 'test'; id: number; files: SourceFile[]; main: string; tests: TestSpec[] }
+  | { type: 'analyze'; id: number; code: string }
   | { type: 'install'; id: number; packages: string[] }
 
 export type FromWorker =
@@ -75,6 +96,7 @@ export type FromWorker =
   | { type: 'input-request'; id: number; prompt: string }
   | { type: 'done'; id: number; result: RunResult }
   | { type: 'tests-done'; id: number; report: TestReport }
+  | { type: 'analysis'; id: number; diagnostics: Diagnostic[] }
   | { type: 'install-done'; id: number; ok: boolean; message: string }
 
 /** Input handshake states in `SharedBuffers.input[0]`. */
