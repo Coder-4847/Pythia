@@ -1,15 +1,19 @@
+import { Heatmap, type HeatCell } from '@/components/ui/Heatmap'
 import { ProgressBar, ProgressRing } from '@/components/ui/Progress'
 import { Counter } from '@/components/ui/Counter'
 import { Reveal } from '@/components/ui/Reveal'
 import { SectionHeading } from '@/features/landing/SectionHeading'
 
 /** Deterministic pseudo-activity so the preview is stable between renders and screenshots. */
-const HEAT = Array.from({ length: 18 * 7 }, (_, i) => {
-  const v = Math.sin(i * 12.9898) * 43758.5453
-  const r = v - Math.floor(v)
-  return i < 40 ? (r > 0.7 ? 1 : 0) : r > 0.35 ? Math.ceil(r * 4 * (i / 126 + 0.4)) : 0
-}).map((n) => Math.min(4, n))
-const HEAT_COLOR = ['var(--c-raised)', 'color-mix(in srgb, var(--c-gold) 25%, var(--c-raised))', 'color-mix(in srgb, var(--c-gold) 50%, var(--c-raised))', 'color-mix(in srgb, var(--c-gold) 75%, var(--c-raised))', 'var(--c-gold)']
+const SAMPLE_WEEKS: HeatCell[][] = Array.from({ length: 18 }, (_, w) =>
+  Array.from({ length: 7 }, (_, d) => {
+    const i = w * 7 + d
+    const v = Math.sin(i * 12.9898) * 43758.5453
+    const r = v - Math.floor(v)
+    const level = i < 40 ? (r > 0.7 ? 1 : 0) : r > 0.35 ? Math.min(4, Math.ceil(r * 4 * (i / 126 + 0.4))) : 0
+    return { level: level as HeatCell['level'], label: 'Sample data' }
+  }),
+)
 
 export function ProgressPreview() {
   return (
@@ -30,11 +34,7 @@ export function ProgressPreview() {
               </div>
             </div>
             <div className="rounded-2xl border border-line bg-bg/50 p-5">
-              <div className="grid gap-[3px]" style={{ gridTemplateRows: 'repeat(7, 1fr)', gridAutoFlow: 'column' }} aria-hidden>
-                {HEAT.map((level, i) => (
-                  <span key={i} className="aspect-square rounded-[3px]" style={{ background: HEAT_COLOR[level] }} />
-                ))}
-              </div>
+              <Heatmap weeks={SAMPLE_WEEKS} summary="Sample activity heatmap for the last 18 weeks" />
               <p className="mt-3 text-xs text-dim">Last 18 weeks · sample data</p>
             </div>
           </div>

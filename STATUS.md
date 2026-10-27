@@ -2,6 +2,33 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 7 — dashboard, archive, achievements, profile, stats, settings ✅
+
+Done
+- **Pure engines with tests** (`src/engine/stats.ts`, `achievements.ts`, `src/lib/diff.ts`, `fuzzy.ts`): streaks, daily-goal
+  progress, an 18-week heatmap, 30-day XP, help-used distribution, per-track attempts and pass rate, and 19 achievements that
+  reward habits and persistence, never speed. All derived from stored attempts, so every device computes the same numbers.
+- **Pages** (all lazy routes): Dashboard (continue card, streak, goal ring, level, heatmap, tracks, recommended next, empty
+  state), Archive (search by lesson *or the code you wrote*, status and track filters; per-lesson attempt timeline, view
+  code, first-vs-latest diff), Achievements (a watcher stores unlocks in IndexedDB and shows one toast), Profile, Statistics
+  (accessible SVG chart with a hidden data table), full Settings (theme, reduced motion, font size, Vim, Pythia intensity,
+  AI switch, name, daily goal, plus export / import / reset), About, Privacy, Changelog.
+- **Navigation**: new header (main links on desktop, everything in the menu on mobile), command palette (Ctrl/⌘ K: lessons,
+  pages, actions; native `<dialog>`, ARIA combobox), shortcuts overlay (`?`).
+- Bug found by the new e2e test and fixed: **theme changes were silently dropped** when another setting changed within 300 ms,
+  because both shared one debounce; patches are now merged before the write (`src/data/syncStores.ts`).
+- Visual fixes after screenshots: continue card broke on phones, settings pills had gold text on gold, header overflowed on mobile.
+- Tests: 705 unit tests; 23 Playwright tests (5 new: every page renders without errors, empty states, palette and shortcuts,
+  settings persist across reload, first attempt → dashboard / archive diff / achievement).
+
+Approximated / caveats
+- The Privacy page describes the app as it is today (local storage, optional AI proxy, jsDelivr for Pyodide, no analytics). Phase 8
+  must update it when accounts exist.
+- Profile says "guest, no account"; cloud accounts arrive in Phase 8.
+- Achievements are only evaluated while the app is open; they are derived data, so an unlock is never lost, just recorded late.
+- I have not run an accessibility audit (axe / screen reader) on the new pages yet; that is Phase 9.
+- Statistics and the dashboard have only been looked at with one learner's worth of data (two attempts); heavy-use layouts are untested.
+
 ## Phase 6 — Pythia: local analysis, presentation, AI proxy ✅
 
 Done

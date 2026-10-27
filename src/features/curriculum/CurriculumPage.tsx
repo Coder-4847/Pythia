@@ -1,46 +1,19 @@
 import { m } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { LogoMark } from '@/components/brand/Logo'
-import { buttonClass } from '@/components/ui/Button'
 import { ProgressBar, ProgressRing } from '@/components/ui/Progress'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { LESSONS, lessonsInModule, lessonsInTrack, modulesInTrack, type CatalogLesson } from '@/content'
+import { lessonsInModule, lessonsInTrack, modulesInTrack, type CatalogLesson } from '@/content'
 import { TRACKS, type TrackMeta } from '@/content/tracks'
 import { useProgressMap } from '@/data/hooks'
 import type { LessonProgress } from '@/data/schema'
-import { lessonState, recommendNext, type LessonState } from '@/engine/progress'
+import { lessonState, type LessonState } from '@/engine/progress'
+import { ContinueCard } from '@/features/curriculum/ContinueCard'
 import { cn } from '@/lib/cn'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 type Progress = Map<string, LessonProgress>
 const statusOf = (progress: Progress, id: string) => progress.get(id)?.status ?? 'not_started'
-
-function ContinueCard({ progress }: { progress: Progress }) {
-  const next = recommendNext(LESSONS, (id) => statusOf(progress, id))
-  const started = next ? statusOf(progress, next.id) === 'in_progress' : false
-  const anyProgress = [...progress.values()].some((p) => p.status !== 'not_started')
-
-  if (!next)
-    return (
-      <div className="rounded-3xl border border-line bg-surface p-6">
-        <p className="font-serif text-3xl">You’ve finished everything available.</p>
-        <p className="mt-2 text-muted">More lessons are on the way. Meanwhile, the playground is always open.</p>
-      </div>
-    )
-  return (
-    <div className="flex flex-wrap items-center gap-6 rounded-3xl border border-gold/30 bg-surface p-6">
-      <ProgressRing value={progress.get(next.id)?.percent ?? 0} size={92} label={`${next.title} progress`} />
-      <div className="min-w-0 flex-1">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-gold">{started ? 'Continue where you left off' : anyProgress ? 'Up next' : 'Start here'}</p>
-        <p className="mt-1.5 truncate font-serif text-3xl tracking-tight">{next.title}</p>
-        <p className="mt-1 text-sm text-muted">{next.summary}</p>
-      </div>
-      <Link to={`/lesson/${next.id}`} className={buttonClass('primary', 'lg')}>
-        {started ? 'Continue' : 'Start'} →
-      </Link>
-    </div>
-  )
-}
 
 function Node({ state, percent }: { state: LessonState; percent: number }) {
   if (state === 'in_progress') return <ProgressRing value={percent} size={28} stroke={3.5} showValue={false} label="In progress" />

@@ -12,6 +12,15 @@ const DesignSystem = lazy(() => import('@/features/design/DesignSystemPage'))
 const Playground = lazy(() => import('@/features/playground/PlaygroundPage'))
 const Curriculum = lazy(() => import('@/features/curriculum/CurriculumPage'))
 const Lesson = lazy(() => import('@/features/lessons/LessonPage'))
+const Dashboard = lazy(() => import('@/features/dashboard/DashboardPage'))
+const Archive = lazy(() => import('@/features/archive/ArchivePage'))
+const ArchiveLesson = lazy(() => import('@/features/archive/ArchiveLessonPage'))
+const Achievements = lazy(() => import('@/features/achievements/AchievementsPage'))
+const Profile = lazy(() => import('@/features/profile/ProfilePage'))
+const Stats = lazy(() => import('@/features/stats/StatsPage'))
+const About = lazy(() => import('@/features/about/AboutPage'))
+const Privacy = lazy(() => import('@/features/about/PrivacyPage'))
+const Changelog = lazy(() => import('@/features/about/ChangelogPage'))
 const Settings = lazy(() => import('@/features/settings/SettingsPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
@@ -43,7 +52,16 @@ export function AppRoutes() {
               <Route path="/" element={<Landing />} />
               <Route path="/learn" element={<Curriculum />} />
               <Route path="/lesson/:id" element={<Lesson />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/archive/:id" element={<ArchiveLesson />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/stats" element={<Stats />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/changelog" element={<Changelog />} />
               <Route path="/playground" element={<Playground />} />
               <Route path="/design" element={<DesignSystem />} />
               <Route path="*" element={<NotFound />} />

@@ -39,7 +39,17 @@ export async function hydrateStores(): Promise<void> {
 
 /** Start writing store changes through to IndexedDB. Call once, after the first hydrate. */
 export function startWriteThrough(): void {
-  const saveSettings = debounce((patch: Parameters<typeof updateSettings>[0]) => void updateSettings(patch), 300)
+  // Theme and the other settings change independently; merge pending patches so one never drops the other.
+  let pending: Parameters<typeof updateSettings>[0] = {}
+  const flush = debounce(() => {
+    const patch = pending
+    pending = {}
+    void updateSettings(patch)
+  }, 300)
+  const saveSettings = (patch: Parameters<typeof updateSettings>[0]) => {
+    pending = { ...pending, ...patch }
+    flush()
+  }
   useSettings.subscribe((state) => {
     if (!writing) saveSettings(pick(state))
   })
