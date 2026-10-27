@@ -1,11 +1,12 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from '@/app/Layout'
 import { Skeleton } from '@/components/ui/Skeleton'
+import Landing from '@/features/landing/LandingPage'
 
-// Every page is its own chunk so the landing page stays light.
-const Landing = lazy(() => import('@/features/landing/LandingPage'))
+// The landing page ships in the entry chunk (it is the first paint for most visitors, and a lazy
+// import would add a network round trip). Every other page is its own chunk.
 const DesignSystem = lazy(() => import('@/features/design/DesignSystemPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
@@ -25,7 +26,7 @@ export function AppRoutes() {
   return (
     <Layout>
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div
+        <m.div
           key={location.pathname}
           initial={reduce ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -39,7 +40,7 @@ export function AppRoutes() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </Layout>
   )

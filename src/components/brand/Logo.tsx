@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { useId } from 'react'
 
 /**
@@ -52,10 +52,10 @@ export function LogoMark({ size = 32, animate = false, mono = false, className, 
       aria-hidden={title ? undefined : true}
     >
       {title && <title id={labelId}>{title}</title>}
-      <motion.path d={STEM} {...line(0, 0.9)} />
-      <motion.path d={BOWL} {...line(0.35, 1.1)} />
-      <motion.path d={TONGUE} strokeWidth={2} {...line(1.3, 0.35)} />
-      <motion.circle
+      <m.path d={STEM} {...line(0, 0.9)} />
+      <m.path d={BOWL} {...line(0.35, 1.1)} />
+      <m.path d={TONGUE} strokeWidth={2} {...line(1.3, 0.35)} />
+      <m.circle
         cx={36.5}
         cy={22.5}
         r={3.5}

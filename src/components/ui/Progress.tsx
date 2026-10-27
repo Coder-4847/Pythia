@@ -1,4 +1,4 @@
-import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
+import { animate, m, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
 import { useEffect } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -46,7 +46,7 @@ export function ProgressRing({ value, size = 96, stroke = 7, label, className, s
     >
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="var(--c-line)" strokeWidth={stroke} />
-        <motion.circle
+        <m.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -59,7 +59,7 @@ export function ProgressRing({ value, size = 96, stroke = 7, label, className, s
         />
       </svg>
       {showValue && (
-        <motion.span className="absolute font-mono text-sm tabular-nums text-fg">{text}</motion.span>
+        <m.span className="absolute font-mono text-sm tabular-nums text-fg">{text}</m.span>
       )}
     </div>
   )
@@ -85,7 +85,7 @@ export function ProgressBar({ value, label, tone = 'gold', className }: BarProps
       aria-label={label}
       className={cn('h-1.5 w-full overflow-hidden rounded-full bg-raised', className)}
     >
-      <motion.div
+      <m.div
         className={cn('h-full rounded-full', tone === 'gold' ? 'bg-gold' : 'bg-ok')}
         initial={{ width: reduce ? `${pct}%` : 0 }}
         animate={{ width: `${pct}%` }}

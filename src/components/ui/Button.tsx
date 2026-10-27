@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -18,7 +18,7 @@ const sizes: Record<Size, string> = {
   lg: 'h-12 px-7 text-[15px]',
 }
 
-export interface ButtonProps extends Omit<ComponentPropsWithoutRef<typeof motion.button>, 'ref'> {
+export interface ButtonProps extends Omit<ComponentPropsWithoutRef<typeof m.button>, 'ref'> {
   variant?: Variant
   size?: Size
 }
@@ -30,7 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 ) {
   const reduce = useReducedMotion()
   return (
-    <motion.button
+    <m.button
       ref={ref}
       whileTap={reduce ? undefined : { scale: 0.96 }}
       transition={{ type: 'spring', stiffness: 500, damping: 30 }}

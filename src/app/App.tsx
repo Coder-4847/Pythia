@@ -1,3 +1,4 @@
+import { domAnimation, LazyMotion } from 'framer-motion'
 import { HashRouter } from 'react-router-dom'
 import { AppRoutes } from '@/app/routes'
 
@@ -7,8 +8,11 @@ import { AppRoutes } from '@/app/routes'
  */
 export function App() {
   return (
-    <HashRouter>
-      <AppRoutes />
-    </HashRouter>
+    // `strict` makes any accidental full `motion.*` import fail loudly instead of bloating the bundle.
+    <LazyMotion features={domAnimation} strict>
+      <HashRouter>
+        <AppRoutes />
+      </HashRouter>
+    </LazyMotion>
   )
 }

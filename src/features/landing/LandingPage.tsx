@@ -1,21 +1,32 @@
-import { Link } from 'react-router-dom'
-import { LogoMark } from '@/components/brand/Logo'
-import { buttonClass } from '@/components/ui/Button'
+import { useReducedMotion } from 'framer-motion'
+import { lazy, Suspense, useEffect } from 'react'
+import { Hero } from '@/features/landing/Hero'
 
-/** Phase 1 shell. The full scroll-driven landing page arrives in phase 2. */
+// Everything below the fold (and GSAP with it) loads after the hero has painted.
+const BelowTheFold = lazy(() => import('@/features/landing/BelowTheFold'))
+
+/** The marketing page: smooth-scrolled, with GSAP scroll-driven sections. */
 export default function LandingPage() {
+  const reduce = useReducedMotion() ?? false
+  useEffect(() => {
+    // GSAP + Lenis stay out of the critical path: they load once the hero is up.
+    let stop = () => {}
+    let cancelled = false
+    void import('@/lib/smoothScroll').then(({ startSmoothScroll }) => {
+      if (!cancelled) stop = startSmoothScroll(reduce)
+    })
+    return () => {
+      cancelled = true
+      stop()
+    }
+  }, [reduce])
+
   return (
-    <section className="mx-auto flex max-w-3xl flex-col items-center px-6 py-28 text-center">
-      <LogoMark size={88} animate />
-      <h1 className="mt-10 font-serif text-6xl leading-[1.02] tracking-tight sm:text-7xl">
-        The tutor that sees your bugs coming.
-      </h1>
-      <p className="mt-6 max-w-xl text-lg text-muted">
-        Write real Python in your browser. Pythia asks the question that helps you find the bug yourself.
-      </p>
-      <Link to="/design" className={buttonClass('primary', 'lg', 'mt-10')}>
-        See the design system
-      </Link>
-    </section>
+    <>
+      <Hero />
+      <Suspense fallback={null}>
+        <BelowTheFold />
+      </Suspense>
+    </>
   )
 }

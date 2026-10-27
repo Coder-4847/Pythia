@@ -1,7 +1,18 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { START_PATH } from '@/app/paths'
 import { Logo } from '@/components/brand/Logo'
+import { buttonClass } from '@/components/ui/Button'
+import { scrollToId } from '@/lib/scrollTo'
 import { useTheme } from '@/stores/theme'
+
+/** In-page sections of the landing page. Buttons, not anchors: `#` belongs to the hash router. */
+const LANDING_NAV = [
+  ['how', 'How it works'],
+  ['curriculum', 'Curriculum'],
+  ['playground', 'Playground'],
+  ['faq', 'FAQ'],
+] as const
 
 function ThemeToggle() {
   const { theme, toggle } = useTheme()
@@ -28,23 +39,44 @@ function ThemeToggle() {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const onLanding = useLocation().pathname === '/'
   return (
-    <div className="flex min-h-dvh flex-col">
-      <a
-        href="#main"
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
+      <button
+        type="button"
+        onClick={() => document.getElementById('main')?.focus()}
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-gold focus:px-4 focus:py-2 focus:text-gold-ink"
       >
         Skip to content
-      </a>
+      </button>
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
           <Link to="/" aria-label="Pythia home" className="rounded-md">
             <Logo size={26} />
           </Link>
-          <ThemeToggle />
+          {onLanding && (
+            <nav aria-label="Sections" className="hidden items-center gap-1 md:flex">
+              {LANDING_NAV.map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => scrollToId(id)}
+                  className="rounded-full px-3.5 py-1.5 text-sm text-muted transition-colors hover:bg-raised hover:text-fg"
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+          )}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link to={START_PATH} className={buttonClass('primary', 'sm')}>
+              Start coding
+            </Link>
+          </div>
         </div>
       </header>
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
     </div>
