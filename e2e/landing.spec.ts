@@ -13,7 +13,9 @@ test('landing: hero demo flags the bug and Pythia asks a question', async ({ pag
 
 test('landing: section nav scrolls without breaking hash routing', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('#faq')).toBeAttached() // the landing chunk is lazy
+  // Below-the-fold sections and smooth scrolling both load after the hero.
+  await expect(page.locator('#faq')).toBeAttached()
+  await expect(page.locator('html.lenis')).toBeAttached()
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('button', { name: 'FAQ' }).click()
   await expect(page.locator('#faq')).toBeInViewport()
   expect(page.url()).not.toContain('#faq')

@@ -1,6 +1,8 @@
 /** Anything that can scroll to an element; Lenis when smooth scrolling is on. */
 interface Scroller {
   scrollTo: (el: HTMLElement, opts: { offset: number }) => void
+  /** Re-measure the document; needed when content is added after the scroller started. */
+  resize: () => void
 }
 
 let scroller: Scroller | null = null
@@ -16,4 +18,9 @@ export function scrollToId(id: string) {
   if (!el) return
   if (scroller) scroller.scrollTo(el, { offset: -72 })
   else el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/** Tell the scroller the document height changed (e.g. lazy sections mounted). */
+export function refreshScroller() {
+  scroller?.resize()
 }

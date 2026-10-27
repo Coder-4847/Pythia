@@ -17,7 +17,7 @@ Done
 - Lighthouse 12 on the production build (simulated mobile, sandbox Chromium): performance 91, accessibility
   100, best practices 100, SEO 100. Main chunk 105 kB gzip; GSAP/Lenis and all below-the-fold sections load
   after the hero. Framer Motion runs through `LazyMotion` (`m.*`, strict).
-- Found and fixed along the way: h1 words had no spaces for screen readers, low-contrast `dim` text,
+- Found and fixed along the way: Lenis measured the page before the lazy sections mounted (nav scrolls stopped short); h1 words had no spaces for screen readers, low-contrast `dim` text,
   invalid list markup, 8px horizontal overflow on mobile.
 
 Approximated / caveats
