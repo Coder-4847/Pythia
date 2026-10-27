@@ -16,11 +16,14 @@ interface Opts {
 /** JSON can't express tuples or sets, so tests mark them and the Python runner revives them. */
 export const tuple = (...items: unknown[]) => ({ $tuple: items })
 export const setOf = (...items: unknown[]) => ({ $set: items })
+/** A dict whose keys aren't strings (JSON object keys always are): `dictOf([1, 'a'], [2, 'b'])`. */
+export const dictOf = (...pairs: [unknown, unknown][]) => ({ $dict: pairs })
 
 const show = (value: unknown): string => {
   if (typeof value === 'object' && value !== null) {
     if ('$tuple' in value) return `(${(value.$tuple as unknown[]).map(show).join(', ')}${(value.$tuple as unknown[]).length === 1 ? ',' : ''})`
     if ('$set' in value) return `{${(value.$set as unknown[]).map(show).join(', ')}}`
+    if ('$dict' in value) return `{${(value.$dict as [unknown, unknown][]).map(([k, v]) => `${show(k)}: ${show(v)}`).join(', ')}}`
   }
   return JSON.stringify(value) ?? 'None'
 }

@@ -2,6 +2,38 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 5 — Tracks 1 and 2 content ✅
+
+Done
+- **28 lessons, 113 exercises, 84 quiz questions**, all in the Markdown format from `CONTENT_GUIDE.md`.
+  - *Foundations (16):* first program, variables, types, arithmetic, strings, string methods and f-strings, input/output,
+    comparisons, if/elif/else, and/or/not, while, for/range, break/continue/nested loops, defining functions, return
+    values, scope and default arguments.
+  - *Data structures (12):* lists, list methods and slicing, looping over lists, sorting and zip, tuples and unpacking,
+    dictionaries, looping over dictionaries, nested data, sets, list comprehensions, dict and set comprehensions,
+    choosing the right container.
+- Every exercise has visible and hidden tests, a 3-rung hint ladder, and a full explanation. Hidden tests re-run the
+  learner's code with different values (`rerunOutput` / `rerunVar`), so hard-coding an answer doesn't pass.
+- **The quality gate runs all of it in real Pyodide** (312 content tests): each reference solution passes every test,
+  each starter fails at least one, hints 1–2 never contain a solution line, diagrams parse, structure rules hold.
+- Test-runner additions: scripted `input()` echoes the answer and Enter like the console (so prompts and answers sit on
+  separate lines), `lastLine` (ignores prompt wording), `rerunOutput`, `rerunVar`, `callPrints`, keyword arguments in
+  `call`, and `dictOf` for dictionaries with non-string keys.
+- 397 unit tests and 12 Playwright tests pass. The curriculum page shows all 28 lessons with progress states.
+
+Fixed along the way
+- A JSON `true` leaked into generated Python (helper now passes values through `json.loads`). Lesson 13 had a meaningless
+  hidden test, removed.
+
+Approximated / caveats
+- I wrote and verified these lessons programmatically, but I have not played through every lesson by hand in the browser;
+  only "Your first program" and "Variables" are covered end to end by Playwright. Expect small wording or difficulty
+  tweaks once real learners try them.
+- Difficulty is my judgement: some later exercises (e.g. `top_n`, `group_by_length`, the capstone) may be a stretch for
+  true beginners; the hint ladder is the safety net.
+- Tests cannot detect style (e.g. a learner who hard-codes a loop count that the hidden tests happen not to vary).
+- Test runs still have no time limit (see Phase 4).
+
 ## Phase 4 — lessons, tests, progress, persistence, import/export ✅
 
 Done

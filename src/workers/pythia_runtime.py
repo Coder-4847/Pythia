@@ -182,7 +182,7 @@ class _Check(Exception):
 
 
 def _revive(value):
-    """JSON → Python, with {"$tuple": [...]} and {"$set": [...]} markers for types JSON lacks."""
+    """JSON → Python, with {"$tuple": ...}, {"$set": ...} and {"$dict": [[k, v], ...]} markers for what JSON lacks."""
     if isinstance(value, list):
         return [_revive(v) for v in value]
     if isinstance(value, dict):
@@ -190,6 +190,8 @@ def _revive(value):
             return tuple(_revive(v) for v in value["$tuple"])
         if set(value) == {"$set"}:
             return {_revive(v) for v in value["$set"]}
+        if set(value) == {"$dict"}:
+            return {_revive(k): _revive(v) for k, v in value["$dict"]}
         return {k: _revive(v) for k, v in value.items()}
     return value
 

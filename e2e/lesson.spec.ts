@@ -77,7 +77,7 @@ test('landing → lesson → run code → complete', async ({ page }) => {
   // Progress survives a reload and shows on the curriculum.
   await page.goto('/#/learn')
   await page.reload()
-  await expect(page.getByText('1/2 lessons').first()).toBeVisible()
+  await expect(page.getByText('1/16 lessons').first()).toBeVisible()
   await expect(page.getByText('Completed').first()).toBeVisible()
   expect(errors).toEqual([])
 })

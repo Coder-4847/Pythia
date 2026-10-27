@@ -122,7 +122,7 @@ export default {
 | `check(name, pythonCode, opts?)` | free-form Python. Sees `ns` (the learner's globals), `out` (printed text), `src` (their source), `fail(msg)`, `equal(a, b)`. A failed `assert "message"` is shown to the learner |
 
 `opts`: `hidden`, `hint` (shown on failure; for hidden tests it is the *only* thing shown), `stdin`, `name`.
-Use `tuple(1, 2)` and `setOf(1, 2)` for expected values JSON can't express.
+Use `tuple(1, 2)`, `setOf(1, 2)` and `dictOf([1, 'a'], [2, 'b'])` for expected values JSON can't express (tuples, sets, and dictionaries with non-string keys).
 
 How tests run: for **each** test the learner's program is executed from scratch (so tests cannot
 affect each other), then the check is applied. Comparison tolerates float rounding and does not let
