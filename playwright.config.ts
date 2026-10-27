@@ -9,7 +9,9 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4173', trace: 'on-first-retry' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm run build && npm run preview -- --port 4173 --strictPort',
+    // Python's core is served locally so the tests don't depend on a CDN.
+    command: 'npm run pyodide:local && npm run build && npm run preview -- --port 4173 --strictPort',
+    env: { VITE_PYODIDE_BASE: '/pyodide/' },
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

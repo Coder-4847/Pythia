@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -34,9 +35,14 @@ function cspPlugin(env: NodeJS.ProcessEnv): Plugin {
   }
 }
 
+const pyodideVersion = (JSON.parse(readFileSync('node_modules/pyodide/package.json', 'utf8')) as { version: string }).version
+
 export default defineConfig(({ mode }) => ({
   // CI derives BASE_PATH from the repository name (e.g. "/Pythia/") for project Pages sites.
   base: process.env.BASE_PATH ?? '/',
+  // The CDN path of the Python runtime is derived from the installed `pyodide` package.
+  define: { __PYODIDE_VERSION__: JSON.stringify(pyodideVersion) },
+  worker: { format: 'es' },
   plugins: [react(), tailwindcss(), cspPlugin(process.env)],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: { target: 'es2022', sourcemap: mode !== 'production' },

@@ -2,6 +2,41 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 3 — Pyodide runtime, editor, console, playground ✅
+
+Done
+- **Runtime** (`src/workers`, `src/features/runtime`): Pyodide in a module Web Worker, lazy-loaded when the
+  playground opens. A small Python module (`pythia_runtime.py`) runs learner code, trims tracebacks to the
+  learner's own frames (relative file names, failing line), streams stdout/stderr live, replaces `input()` and
+  `sys.stdin`, and captures matplotlib figures as PNGs. Runtime logic lives in a worker-free `engine.ts`, so
+  it is tested in Node against real Pyodide (13 tests).
+- **input() and Stop** use SharedArrayBuffer + Atomics + Pyodide's interrupt buffer (`KeyboardInterrupt`),
+  enabled by `coi-serviceworker`. Without isolation: input() reads lines typed in a console box beforehand, and
+  Stop terminates and restarts the worker. If a polite interrupt isn't honoured within 1.5 s (e.g. a long NumPy
+  call), the worker is restarted. Both modes are covered by Playwright.
+- **Editor**: CodeMirror 6 with a token-driven theme (follows dark/light with no reconfiguration), Python
+  language + autocomplete + 10 snippet templates, per-tab undo history, Ctrl/⌘+Enter to run, lazy-loaded Vim mode
+  (selected via the settings store; the settings UI arrives in Phase 7).
+- **Playground** (`#/playground`): multi-file tabs (add / rename with F2 or double-click / delete; files can import
+  each other), console with inline `input()`, inline plots, micropip package install panel, 13-snippet library
+  (the pure-Python ones are executed in a test, the scientific ones compile-checked), shareable links (code is
+  deflate-compressed into `#/playground?c=…`, validated and size-bounded on load, confirmation before overwriting
+  work), toasts, confirm dialog.
+- 10 Playwright tests (landing + playground) and 35 unit tests, all green.
+
+Approximated / caveats
+- **Not verified in a browser here:** NumPy / pandas / matplotlib / scikit-learn loading and plot rendering, and
+  micropip installs. The sandbox cannot reach the Pyodide CDN, so the e2e suite serves the Pyodide *core* locally
+  (`npm run pyodide:local`). The matplotlib capture code (`_flush_figures`) and the package-loading path are written
+  against Pyodide's documented API but have not been run end to end. Figures are captured when the program
+  finishes (not at each `plt.show()`), which gives the same pictures in the same order.
+- The playground's files and the editor settings live in memory until Phase 4 adds IndexedDB persistence, so a
+  reload resets them (share links work meanwhile).
+- `coi-serviceworker` and the Phase 9 PWA service worker both want the root scope. In Phase 9 they will be merged
+  into one worker (cache + COOP/COEP headers) rather than registering two.
+- The first visit reloads once while the isolation service worker installs.
+- Pythia (bug prediction) is not in the playground yet — that is Phase 6.
+
 ## Phase 2 — landing page ✅
 
 Done

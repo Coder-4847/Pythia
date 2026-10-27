@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { START_PATH } from '@/app/paths'
 import { Logo } from '@/components/brand/Logo'
 import { buttonClass } from '@/components/ui/Button'
+import { Toaster } from '@/components/ui/Toaster'
+import { cn } from '@/lib/cn'
 import { scrollToId } from '@/lib/scrollTo'
 import { useTheme } from '@/stores/theme'
 
@@ -39,7 +41,10 @@ function ThemeToggle() {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
-  const onLanding = useLocation().pathname === '/'
+  const { pathname } = useLocation()
+  const onLanding = pathname === '/'
+  // Workspace pages (editor + console) use the full window width.
+  const wide = pathname.startsWith('/playground')
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
       <button
@@ -50,7 +55,7 @@ export function Layout({ children }: { children: ReactNode }) {
         Skip to content
       </button>
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
+        <div className={cn('mx-auto flex h-16 w-full items-center justify-between px-6', wide ? 'max-w-none' : 'max-w-6xl')}>
           <Link to="/" aria-label="Pythia home" className="rounded-md">
             <Logo size={26} />
           </Link>
@@ -69,6 +74,9 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           )}
           <div className="flex items-center gap-2">
+            <Link to="/playground" className={cn(buttonClass('ghost', 'sm'), 'hidden sm:inline-flex')}>
+              Playground
+            </Link>
             <ThemeToggle />
             <Link to={START_PATH} className={buttonClass('primary', 'sm')}>
               Start coding
@@ -79,6 +87,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
+      <Toaster />
     </div>
   )
 }

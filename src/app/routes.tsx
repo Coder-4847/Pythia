@@ -8,6 +8,7 @@ import Landing from '@/features/landing/LandingPage'
 // The landing page ships in the entry chunk (it is the first paint for most visitors, and a lazy
 // import would add a network round trip). Every other page is its own chunk.
 const DesignSystem = lazy(() => import('@/features/design/DesignSystemPage'))
+const Playground = lazy(() => import('@/features/playground/PlaygroundPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
 function PageFallback() {
@@ -36,6 +37,7 @@ export function AppRoutes() {
           <Suspense fallback={<PageFallback />}>
             <Routes location={location}>
               <Route path="/" element={<Landing />} />
+              <Route path="/playground" element={<Playground />} />
               <Route path="/design" element={<DesignSystem />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
