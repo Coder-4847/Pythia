@@ -13,6 +13,8 @@ interface ConsoleProps {
   /** Without cross-origin isolation, input() reads these pre-typed lines instead. */
   stdin: string
   onStdinChange: (text: string) => void
+  /** Hide the header and cap the height, for inline snippets inside lesson text. */
+  compact?: boolean
   className?: string
 }
 
@@ -25,7 +27,7 @@ const TEXT_STYLE: Record<'stdout' | 'stderr' | 'stdin' | 'status' | 'info', stri
 }
 
 /** Program output, plots, and an inline input() prompt. */
-export function Console({ entries, running, prompt, onSubmitInput, onClear, stdin, onStdinChange, className }: ConsoleProps) {
+export function Console({ entries, running, prompt, onSubmitInput, onClear, stdin, onStdinChange, compact, className }: ConsoleProps) {
   const scroller = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [answer, setAnswer] = useState('')
@@ -49,6 +51,7 @@ export function Console({ entries, running, prompt, onSubmitInput, onClear, stdi
 
   return (
     <section aria-label="Console" className={cn('flex min-h-0 flex-col bg-bg/60', className)}>
+      {!compact && (
       <header className="flex items-center justify-between border-b border-line px-4 py-2">
         <h2 className="font-mono text-[11px] uppercase tracking-[0.18em] text-dim">Console</h2>
         <button
@@ -60,6 +63,7 @@ export function Console({ entries, running, prompt, onSubmitInput, onClear, stdi
           Clear
         </button>
       </header>
+      )}
 
       {!isolated && (
         <label className="block border-b border-line px-4 py-2 text-xs text-muted">
@@ -78,9 +82,12 @@ export function Console({ entries, running, prompt, onSubmitInput, onClear, stdi
         role="log"
         aria-live="polite"
         tabIndex={0}
-        className="min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-words px-4 py-3 font-mono text-[13px] leading-6"
+        className={cn(
+          'min-h-0 flex-1 overflow-auto whitespace-pre-wrap break-words px-4 py-3 font-mono text-[13px] leading-6',
+          compact && 'max-h-56',
+        )}
       >
-        {entries.length === 0 && !running && <p className="text-dim">Press Run (Ctrl/⌘ + Enter) to see output here.</p>}
+        {entries.length === 0 && !running && <p className="text-dim">{compact ? 'Output appears here.' : 'Press Run (Ctrl/⌘ + Enter) to see output here.'}</p>}
         {entries.map((entry) => {
           if (entry.kind === 'image')
             return <img key={entry.id} src={`data:image/png;base64,${entry.png}`} alt="Plot produced by your program" className="my-2 max-w-full rounded-lg bg-white" />

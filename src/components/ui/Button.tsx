@@ -1,4 +1,5 @@
-import { m, useReducedMotion } from 'framer-motion'
+import { m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { forwardRef, type ComponentPropsWithoutRef } from 'react'
 import { cn } from '@/lib/cn'
 

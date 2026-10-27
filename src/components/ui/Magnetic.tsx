@@ -1,4 +1,5 @@
-import { m, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
+import { m, useMotionValue, useSpring } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { useRef, type ReactNode } from 'react'
 
 /** Wraps a control so it leans toward the cursor, like it wants to be clicked. */

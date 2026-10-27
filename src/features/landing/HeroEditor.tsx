@@ -1,4 +1,5 @@
-import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { useEffect, useState } from 'react'
 import { LogoMark } from '@/components/brand/Logo'
 import { CodeText } from '@/components/ui/CodeText'

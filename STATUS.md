@@ -2,6 +2,46 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 4 — lessons, tests, progress, persistence, import/export ✅
+
+Done
+- **Content format** (`CONTENT_GUIDE.md`): a lesson is a Markdown file (concept, worked example, 2–5 exercises with
+  starter/solution/3-rung hints/explanation, quiz) plus a `.tests.ts` file. A strict parser fails with file-named errors.
+  Markdown renders to React elements (no HTML injection); `diagram` fences draw animated boxes / strips / flows.
+- **Test runner** (in the Pyodide worker): `call` / `output` / `variable` / `check` tests, hidden tests, scripted `input()`,
+  a fresh program run per test, float tolerance, `True != 1`, and generated friendly messages ("returned `None`: is there a
+  `return`?", "line 2 of the output should be …"). 21 engine tests against real Pyodide.
+- **Lesson page** (`#/lesson/:id`): Learn → Example → Exercises → Checkpoint stepper, editor + console + tests, hint ladder
+  (nudge → question → concrete hint → "I'm stuck" explanation, each costing a little XP), live inline snippets, autosaved drafts,
+  resume where you left off, celebration burst, completion screen.
+- **Progress engine** (pure, 17 tests): XP (first pass only; hints cost 2 XP each, floor of 10), levels, streaks, per-day
+  activity, lesson status/percent, soft "recommended later" locking, next-lesson recommendation.
+- **IndexedDB (Dexie)** is the source of truth: profile, settings, lesson progress, attempts, drafts, quiz results, snippets,
+  playground workspace, achievements. Settings and playground files now persist and hydrate at startup.
+- **Export / import** (zod-validated, versioned, with a migration hook): preview table of what changes, merge (last-write-wins
+  per item) or replace, atomic apply, size cap, readable errors; **Reset all data**. Lives on `#/settings` for now.
+- **Curriculum page** (`#/learn`): continue card with progress ring, tracks → modules → lessons path with completed /
+  in-progress / ready / recommended-later states, roadmap cards for empty tracks.
+- Two real lessons ("Your first program", "Variables") in the new format. The content test runs every reference solution
+  through the real runner and checks every starter fails.
+- 106 unit tests, 12 Playwright tests (incl. landing → lesson → fail → hint → pass → quiz → complete → reload, and
+  export → reset → import).
+
+Fixed along the way
+- My own first hint leaked the answer (caught by the content test). Duplicate `h1` on the completion screen. Inline code inside
+  bold rendered with literal backticks. Lesson pages now warm up Python on open.
+
+Approximated / caveats
+- Only 2 of the ~30 Track 1–2 lessons exist; the other 28 are Phase 5. The curriculum shows modules once they have lessons.
+- Lessons that need NumPy/pandas/etc. can't be executed by the Node content test (CDN wheels); they'll be verified with native
+  Python instead (Phase 9).
+- Test runs have no time limit: an infinite loop in a learner's solution is stopped with the Stop button (which restarts the
+  worker if needed), not automatically.
+- "Locked" is a recommendation only; every lesson can be opened.
+- The Settings page currently contains only the data-management section (full settings arrive with Phase 7).
+- Achievements table exists but nothing unlocks yet (Phase 7). Pythia hints in the lesson are the static ladder; live bug
+  prediction is Phase 6.
+
 ## Phase 3 — Pyodide runtime, editor, console, playground ✅
 
 Done

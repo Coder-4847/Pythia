@@ -1,4 +1,5 @@
-import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { lazy, Suspense } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from '@/app/Layout'
@@ -9,6 +10,9 @@ import Landing from '@/features/landing/LandingPage'
 // import would add a network round trip). Every other page is its own chunk.
 const DesignSystem = lazy(() => import('@/features/design/DesignSystemPage'))
 const Playground = lazy(() => import('@/features/playground/PlaygroundPage'))
+const Curriculum = lazy(() => import('@/features/curriculum/CurriculumPage'))
+const Lesson = lazy(() => import('@/features/lessons/LessonPage'))
+const Settings = lazy(() => import('@/features/settings/SettingsPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
 function PageFallback() {
@@ -37,6 +41,9 @@ export function AppRoutes() {
           <Suspense fallback={<PageFallback />}>
             <Routes location={location}>
               <Route path="/" element={<Landing />} />
+              <Route path="/learn" element={<Curriculum />} />
+              <Route path="/lesson/:id" element={<Lesson />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/playground" element={<Playground />} />
               <Route path="/design" element={<DesignSystem />} />
               <Route path="*" element={<NotFound />} />

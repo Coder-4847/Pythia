@@ -22,7 +22,8 @@ interface PlaygroundState {
   addFile: (name: string, code?: string) => string | null
   renameFile: (id: number, name: string) => string | null
   deleteFile: (id: number) => void
-  replaceAll: (files: SourceFile[]) => void
+  /** Swap in a whole workspace; `activeName` picks the open tab (default: the first). */
+  replaceAll: (files: SourceFile[], activeName?: string) => void
   isPristine: () => boolean
 }
 
@@ -37,7 +38,7 @@ function validateName(files: PlaygroundFile[], name: string, ignoreId?: number):
 
 const first = make('main.py', STARTER_CODE)
 
-/** Files in the playground workspace. Phase 4 persists this to IndexedDB. */
+/** Files in the playground workspace. `data/syncStores.ts` persists them to IndexedDB. */
 export const usePlayground = create<PlaygroundState>((set, get) => ({
   files: [first],
   activeId: first.id,
@@ -66,9 +67,9 @@ export const usePlayground = create<PlaygroundState>((set, get) => ({
       const files = s.files.filter((f) => f.id !== id)
       return { files, activeId: s.activeId === id ? (files[0]?.id ?? s.activeId) : s.activeId }
     }),
-  replaceAll: (incoming) => {
+  replaceAll: (incoming, activeName) => {
     const files = incoming.map((f) => make(f.name, f.code))
-    set({ files, activeId: files[0]!.id })
+    set({ files, activeId: (files.find((f) => f.name === activeName) ?? files[0]!).id })
   },
   isPristine: () => {
     const { files } = get()

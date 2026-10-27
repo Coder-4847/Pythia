@@ -1,4 +1,5 @@
-import { m, useReducedMotion } from 'framer-motion'
+import { m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { CodeText } from '@/components/ui/CodeText'
 import { Reveal } from '@/components/ui/Reveal'
 import { SectionHeading } from '@/features/landing/SectionHeading'

@@ -1,4 +1,5 @@
-import { m, useReducedMotion } from 'framer-motion'
+import { m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
 import { START_PATH } from '@/app/paths'

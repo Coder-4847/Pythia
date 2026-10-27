@@ -1,4 +1,5 @@
-import { animate, m, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
+import { animate, m, useMotionValue, useTransform } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { useEffect } from 'react'
 import { cn } from '@/lib/cn'
 

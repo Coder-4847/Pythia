@@ -1,4 +1,4 @@
-import { useReducedMotion } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import { lazy, Suspense, useEffect } from 'react'
 import { Hero } from '@/features/landing/Hero'
 
@@ -7,7 +7,7 @@ const BelowTheFold = lazy(() => import('@/features/landing/BelowTheFold'))
 
 /** The marketing page: smooth-scrolled, with GSAP scroll-driven sections. */
 export default function LandingPage() {
-  const reduce = useReducedMotion() ?? false
+  const reduce = useReducedMotion()
   useEffect(() => {
     // GSAP + Lenis stay out of the critical path: they load once the hero is up.
     let stop = () => {}

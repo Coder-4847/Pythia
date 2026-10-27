@@ -1,4 +1,5 @@
-import { m, useReducedMotion } from 'framer-motion'
+import { m } from 'framer-motion'
+import { useReducedMotion } from '@/lib/useReducedMotion'
 import type { ReactNode } from 'react'
 
 interface RevealProps {

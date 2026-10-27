@@ -1,6 +1,6 @@
 import type { PyodideInterface } from 'pyodide'
 import runtimeSource from '@/workers/pythia_runtime.py?raw'
-import type { RunResult, SourceFile } from '@/workers/protocol'
+import type { RunResult, SourceFile, TestReport, TestSpec } from '@/workers/protocol'
 
 /** What the engine needs from its environment (the worker, or a test). */
 export interface EngineHost {
@@ -16,10 +16,15 @@ export interface EngineHost {
 
 export interface Engine {
   run: (files: SourceFile[], main: string) => Promise<RunResult>
+  runTests: (files: SourceFile[], main: string, tests: TestSpec[]) => Promise<TestReport>
   install: (packages: string[]) => Promise<{ ok: boolean; message: string }>
 }
 
-type PyRuntimeModule = { run: (filesJson: string, main: string) => string; configure: (...fns: unknown[]) => void }
+type PyRuntimeModule = {
+  run: (filesJson: string, main: string) => string
+  run_tests: (filesJson: string, main: string, testsJson: string) => string
+  configure: (...fns: unknown[]) => void
+}
 
 /** Wrap Pyodide with Pythia's run/stream/plot/input behaviour. Pure logic, no worker globals. */
 export async function createEngine(py: PyodideInterface, host: EngineHost): Promise<Engine> {
@@ -45,19 +50,27 @@ export async function createEngine(py: PyodideInterface, host: EngineHost): Prom
     (png: string) => host.image(png),
   )
 
+  /** Load Pyodide packages (NumPy, pandas, ...) that the given sources import. */
+  const loadImports = async (sources: string[]) => {
+    try {
+      await py.loadPackagesFromImports(sources.join('\n'), { messageCallback: host.status, errorCallback: host.status })
+    } catch (e) {
+      // The import will fail with a normal ModuleNotFoundError, which Pythia can explain.
+      host.status(`Couldn't load a package automatically: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   return {
     async run(files, main) {
-      try {
-        await py.loadPackagesFromImports(files.map((f) => f.code).join('\n'), {
-          messageCallback: host.status,
-          errorCallback: host.status,
-        })
-      } catch (e) {
-        // The import will fail with a normal ModuleNotFoundError, which Pythia can explain.
-        host.status(`Couldn't load a package automatically: ${e instanceof Error ? e.message : String(e)}`)
-      }
+      await loadImports(files.map((f) => f.code))
       const filesJson = JSON.stringify(Object.fromEntries(files.map((f) => [f.name, f.code])))
       return JSON.parse(runtime.run(filesJson, main)) as RunResult
+    },
+
+    async runTests(files, main, tests) {
+      await loadImports([...files.map((f) => f.code), ...tests.flatMap((t) => (t.kind === 'check' ? [t.code] : []))])
+      const filesJson = JSON.stringify(Object.fromEntries(files.map((f) => [f.name, f.code])))
+      return JSON.parse(runtime.run_tests(filesJson, main, JSON.stringify(tests))) as TestReport
     },
 
     async install(packages) {

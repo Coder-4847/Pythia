@@ -8,6 +8,13 @@ import { cn } from '@/lib/cn'
 import { scrollToId } from '@/lib/scrollTo'
 import { useTheme } from '@/stores/theme'
 
+/** Primary navigation between the app's areas. */
+const APP_NAV = [
+  ['/learn', 'Learn'],
+  ['/playground', 'Playground'],
+  ['/settings', 'Settings'],
+] as const
+
 /** In-page sections of the landing page. Buttons, not anchors: `#` belongs to the hash router. */
 const LANDING_NAV = [
   ['how', 'How it works'],
@@ -44,7 +51,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const onLanding = pathname === '/'
   // Workspace pages (editor + console) use the full window width.
-  const wide = pathname.startsWith('/playground')
+  const wide = pathname.startsWith('/playground') || pathname.startsWith('/lesson/')
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
       <button
@@ -74,9 +81,11 @@ export function Layout({ children }: { children: ReactNode }) {
             </nav>
           )}
           <div className="flex items-center gap-2">
-            <Link to="/playground" className={cn(buttonClass('ghost', 'sm'), 'hidden sm:inline-flex')}>
-              Playground
-            </Link>
+            {APP_NAV.map(([to, label]) => (
+              <Link key={to} to={to} className={cn(buttonClass('ghost', 'sm'), 'hidden sm:inline-flex', pathname.startsWith(to) && 'text-fg')}>
+                {label}
+              </Link>
+            ))}
             <ThemeToggle />
             <Link to={START_PATH} className={buttonClass('primary', 'sm')}>
               Start coding

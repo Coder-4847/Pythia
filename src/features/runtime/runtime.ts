@@ -7,6 +7,8 @@ import {
   type RunResult,
   type SharedBuffers,
   type SourceFile,
+  type TestReport,
+  type TestSpec,
   type ToWorker,
 } from '@/workers/protocol'
 
@@ -48,7 +50,9 @@ export interface RunHandlers {
 interface InFlight {
   id: number
   handlers: RunHandlers
+  /** Called with the program's result, or with a "stopped" result if the worker was killed. */
   resolve: (r: RunResult) => void
+  resolveTests?: (r: TestReport) => void
 }
 
 const STOPPED: RunResult = {
@@ -133,6 +137,13 @@ class PythonRuntime {
           run.resolve(msg.result)
         }
         break
+      case 'tests-done':
+        if (run?.id === msg.id && run.resolveTests) {
+          this.clearStopTimer()
+          this.run = null
+          run.resolveTests(msg.report)
+        }
+        break
       case 'install-done':
         this.installs.get(msg.id)?.({ ok: msg.ok, message: msg.message })
         this.installs.delete(msg.id)
@@ -148,6 +159,22 @@ class PythonRuntime {
     return new Promise<RunResult>((resolve) => {
       this.run = { id, handlers, resolve }
       this.post({ type: 'run', id, files, main, stdinLines })
+    })
+  }
+
+  /** Run lesson tests against `main`. Output is captured, not streamed; `handlers` still gets status lines. */
+  async runTests(files: SourceFile[], main: string, tests: TestSpec[], handlers: Pick<RunHandlers, 'onStatus'>): Promise<TestReport> {
+    await this.ensureReady()
+    if (this.run) throw new Error('A program is already running')
+    const id = this.nextId++
+    return new Promise<TestReport>((resolve) => {
+      this.run = {
+        id,
+        handlers: { onStdout: () => {}, onStderr: () => {}, onImage: () => {}, onInputRequest: () => {}, ...handlers },
+        resolve: () => resolve({ error: null, results: [], durationMs: 0, stopped: true }),
+        resolveTests: resolve,
+      }
+      this.post({ type: 'test', id, files, main, tests })
     })
   }
 

@@ -74,6 +74,10 @@ self.onmessage = async (event: MessageEvent<ToWorker>) => {
     stdinQueue = [...msg.stdinLines]
     const result = await engine.run(msg.files, msg.main)
     send({ type: 'done', id: msg.id, result })
+  } else if (msg.type === 'test') {
+    if (shared) new Uint8Array(shared.interrupt)[0] = 0
+    const report = await engine.runTests(msg.files, msg.main, msg.tests)
+    send({ type: 'tests-done', id: msg.id, report })
   } else {
     const { ok, message } = await engine.install(msg.packages)
     send({ type: 'install-done', id: msg.id, ok, message })

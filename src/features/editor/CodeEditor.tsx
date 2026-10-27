@@ -25,6 +25,8 @@ interface CodeEditorProps {
   initialValue: string
   onChange: (value: string) => void
   onRun?: () => void
+  /** Ctrl/⌘ + Shift + Enter. */
+  onCheck?: () => void
   fontSize: number
   keybindings: Keybindings
   readOnly?: boolean
@@ -50,6 +52,7 @@ export function CodeEditor({
   initialValue,
   onChange,
   onRun,
+  onCheck,
   fontSize,
   keybindings,
   readOnly = false,
@@ -62,9 +65,9 @@ export function CodeEditor({
   const currentKey = useRef(docKey)
   const compartments = useRef({ font: new Compartment(), keys: new Compartment(), readOnly: new Compartment() })
   // Latest callbacks/settings without rebuilding the editor on every render.
-  const latest = useRef({ onChange, onRun, fontSize, keybindings, readOnly, ariaLabel })
+  const latest = useRef({ onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel })
   useLayoutEffect(() => {
-    latest.current = { onChange, onRun, fontSize, keybindings, readOnly, ariaLabel }
+    latest.current = { onChange, onRun, onCheck, fontSize, keybindings, readOnly, ariaLabel }
   })
   const keysLoaded = useRef<{ kind: Keybindings; ext: Extension }>({ kind: 'default', ext: [] })
 
@@ -77,6 +80,13 @@ export function CodeEditor({
         // Run shortcut beats the default "insert blank line" binding.
         Prec.highest(
           keymap.of([
+            {
+              key: 'Mod-Shift-Enter',
+              run: () => {
+                latest.current.onCheck?.()
+                return true
+              },
+            },
             {
               key: 'Mod-Enter',
               run: () => {

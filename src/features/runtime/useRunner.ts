@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { runtime, useRuntimeState } from '@/features/runtime/runtime'
-import type { RunResult, SourceFile } from '@/workers/protocol'
+import type { RunResult, SourceFile, TestReport, TestSpec } from '@/workers/protocol'
 
 export type ConsoleEntry =
   | { id: number; kind: 'stdout' | 'stderr' | 'stdin' | 'status' | 'info' | 'error'; text: string }
@@ -20,6 +20,7 @@ export function useRunner() {
   const [entries, setEntries] = useState<ConsoleEntry[]>([])
   const [running, setRunning] = useState(false)
   const [prompt, setPrompt] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
   const [lastResult, setLastResult] = useState<RunResult | null>(null)
 
   const nextId = useRef(0)
@@ -123,6 +124,28 @@ export function useRunner() {
     [push, flush],
   )
 
+  /** Run lesson tests against `main`. Shares the "one program at a time" rule with `run`. */
+  const check = useCallback(async (files: SourceFile[], main: string, tests: TestSpec[]): Promise<TestReport> => {
+    if (active.current) throw new Error('already running')
+    active.current = true
+    setRunning(true)
+    setChecking(true)
+    try {
+      return await runtime.runTests(files, main, tests, { onStatus: () => {} })
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e)
+      return {
+        error: { type: 'RuntimeUnavailable', message, traceback: `Python could not start: ${message}`, line: null, file: null },
+        results: [],
+        durationMs: 0,
+      }
+    } finally {
+      active.current = false
+      setChecking(false)
+      setRunning(false)
+    }
+  }, [])
+
   const stop = useCallback(() => runtime.stop(), [])
 
   const submitInput = useCallback(
@@ -147,5 +170,5 @@ export function useRunner() {
     [],
   )
 
-  return { entries, running, prompt, lastResult, run, stop, submitInput, clear }
+  return { entries, running, checking, prompt, lastResult, run, check, stop, submitInput, clear }
 }

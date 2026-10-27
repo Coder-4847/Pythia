@@ -4,6 +4,7 @@ import { dirname } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { loadPyodide } from 'pyodide'
 import { createEngine, type Engine, type EngineHost } from '@/workers/engine'
+import type { TestSpec } from '@/workers/protocol'
 
 /** Runs the real Python runtime module inside real Pyodide (core only; no CDN needed). */
 let engine: Engine
@@ -129,5 +130,84 @@ describe('engine.run', () => {
     reset()
     await run('leak = 1')
     expect((await run('print(leak)')).error?.type).toBe('NameError')
+  })
+})
+
+describe('engine.runTests', () => {
+  const test = (code: string, tests: TestSpec[]) => engine.runTests([{ name: 'main.py', code }], 'main.py', tests)
+  const call = (fn: string, args: unknown[], expected: unknown, extra: Partial<TestSpec> = {}): TestSpec =>
+    ({ kind: 'call', name: `${fn}(${args.join(', ')})`, fn, args, expected, ...extra }) as TestSpec
+
+  it('passes correct code and fails wrong code with a specific message', async () => {
+    const report = await test('def add(a, b):\n    return a - b', [call('add', [2, 3], 5)])
+    expect(report.results[0]).toMatchObject({ passed: false, expected: '5', got: '-1' })
+    expect(report.results[0]?.message).toContain('`add(2, 3)` should return 5, but it returned -1')
+
+    const ok = await test('def add(a, b):\n    return a + b', [call('add', [2, 3], 5)])
+    expect(ok.results[0]?.passed).toBe(true)
+  })
+
+  it('explains a missing function and a forgotten return', async () => {
+    const missing = await test('x = 1', [call('add', [1, 2], 3)])
+    expect(missing.results[0]?.message).toContain("I can't find a function called `add`")
+    const none = await test('def add(a, b):\n    a + b', [call('add', [1, 2], 3)])
+    expect(none.results[0]?.message).toContain('returned `None`')
+  })
+
+  it('reports crashes inside the learner function with a line number', async () => {
+    const report = await test('def f(x):\n    return 1 / x', [call('f', [0], 1)])
+    expect(report.results[0]?.message).toMatch(/raised ZeroDivisionError.*line 2/)
+  })
+
+  it('hides details of hidden tests but still shows the author hint', async () => {
+    const report = await test('def f(x):\n    return 1', [call('f', [2], 4, { hidden: true, hint: 'Try a bigger number.' })])
+    expect(report.results[0]).toMatchObject({ hidden: true, passed: false, message: 'Try a bigger number.', expected: null, got: null })
+  })
+
+  it('checks printed output line by line, with scripted input()', async () => {
+    const out: TestSpec = { kind: 'output', name: 'greets', stdin: ['Ada'], expected: 'Name? Hello, Ada!\n' }
+    expect((await test('n = input("Name? ")\nprint(f"Hello, {n}!")', [out])).results[0]?.passed).toBe(true)
+    const bad = await test('n = input("Name? ")\nprint("Hi " + n)', [out])
+    expect(bad.results[0]?.message).toContain("Line 1 of the output should be 'Name? Hello, Ada!'")
+    const eof = await test('input()\ninput()', [{ kind: 'output', name: 'x', stdin: ['a'], expected: '' }])
+    expect(eof.results[0]?.message).toContain('EOFError')
+  })
+
+  it('checks variables and gives friendly messages', async () => {
+    const t: TestSpec = { kind: 'var', name: 'age', variable: 'age', expected: 14 }
+    expect((await test('age = 14', [t])).results[0]?.passed).toBe(true)
+    expect((await test('age = 13', [t])).results[0]?.message).toBe('`age` should be 14, but it is 13.')
+    expect((await test('x = 1', [t])).results[0]?.message).toContain("I don't see a variable called `age`")
+  })
+
+  it('does not accept True for 1, tolerates float rounding, and revives tuples and sets', async () => {
+    expect((await test('x = True', [{ kind: 'var', name: 'x', variable: 'x', expected: 1 }])).results[0]?.passed).toBe(false)
+    expect((await test('x = 0.1 + 0.2', [{ kind: 'var', name: 'x', variable: 'x', expected: 0.3 }])).results[0]?.passed).toBe(true)
+    const shapes: TestSpec[] = [
+      { kind: 'var', name: 't', variable: 't', expected: { $tuple: [1, 2] } },
+      { kind: 'var', name: 's', variable: 's', expected: { $set: [1, 2] } },
+    ]
+    expect((await test('t = (1, 2)\ns = {2, 1}', shapes)).results.every((r) => r.passed)).toBe(true)
+    expect((await test('t = [1, 2]\ns = {2, 1}', shapes)).results[0]?.passed).toBe(false)
+  })
+
+  it('runs custom check code against the learner namespace and printed output', async () => {
+    const t: TestSpec = { kind: 'check', name: 'prints and defines', code: 'assert "hi" in out, "Print hi."\nassert ns["n"] == 3, "n should be 3"' }
+    expect((await test('n = 3\nprint("hi")', [t])).results[0]?.passed).toBe(true)
+    expect((await test('n = 3', [t])).results[0]?.message).toBe('Print hi.')
+  })
+
+  it('isolates tests from each other and reports syntax errors without running any', async () => {
+    const counter = 'count = 0\ndef bump():\n    global count\n    count += 1\n    return count'
+    const twice = [call('bump', [], 1), call('bump', [], 1)]
+    expect((await test(counter, twice)).results.every((r) => r.passed)).toBe(true)
+    const broken = await test('def f(:\n  pass', [call('f', [], 1)])
+    expect(broken.error?.type).toBe('SyntaxError')
+    expect(broken.results).toEqual([])
+  })
+
+  it('fails (not crashes) when the whole program raises at import time', async () => {
+    const report = await test('raise ValueError("boom")', [call('f', [], 1)])
+    expect(report.results[0]?.message).toContain('stopped with ValueError: boom on line 1')
   })
 })
