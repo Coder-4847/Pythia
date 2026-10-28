@@ -5,7 +5,7 @@ Honest running ledger: what is done, what is approximated, and what only you can
 ## Phase 9 — content for tracks 3–7, offline, accessibility, performance, final QA ✅
 
 Done
-- **17 new lessons (68 exercises)**: Intermediate (exceptions, raising errors, classes, generators), Algorithms (recursion, binary
+- **17 new lessons (67 exercises)**: Intermediate (exceptions, raising errors, classes, generators), Algorithms (recursion, binary
   search, sorting by hand, Big-O), Data science (NumPy, pandas, Matplotlib), Machine learning (linear regression, classification,
   overfitting), Projects (text adventure, expense tracker, sales dashboard). 45 lessons in all. Tracks 3–7 stay marked "Preview" and list
   their remaining lessons under "Coming next".
