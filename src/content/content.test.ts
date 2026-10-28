@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { dirname } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -17,6 +18,20 @@ let engine: Engine
 
 /** Lessons whose code needs packages the Node test environment can't download. */
 const needsPackages = (code: string) => /\b(numpy|pandas|matplotlib|sklearn|scipy)\b/.test(code)
+
+/**
+ * Those lessons are run on a native Python that has the scientific stack, through the very same
+ * test runner file the browser loads (scripts/native_check.py). Set PYTHIA_NATIVE_PYTHON to that
+ * interpreter; CI does. Without it they are skipped, as before.
+ */
+const NATIVE_PYTHON = process.env.PYTHIA_NATIVE_PYTHON
+const hasPackages = (e: { solution: string; starter: string; tests: { kind: string; code?: string }[] }) =>
+  needsPackages(e.solution) || needsPackages(e.starter) || e.tests.some((t) => t.kind === 'check' && needsPackages(t.code ?? ''))
+
+function runNative(code: string, tests: unknown[]): { error: unknown; results: { name: string; passed: boolean; message: string | null }[] } {
+  const out = execFileSync(NATIVE_PYTHON!, ['scripts/native_check.py'], { input: JSON.stringify({ code, tests }), encoding: 'utf8', timeout: 120_000, maxBuffer: 20_000_000 })
+  return JSON.parse(out.trim().split('\n').pop()!)
+}
 
 beforeAll(async () => {
   const indexURL = dirname(createRequire(import.meta.url).resolve('pyodide/package.json')) + '/'
@@ -76,18 +91,20 @@ describe.each(LESSONS)('lesson $id', (lesson) => {
 
   for (const exercise of lesson.exercises) {
     it(`exercise ${exercise.id}: the reference solution passes every test`, async () => {
-      if (needsPackages(exercise.solution) || exercise.tests.some((t) => t.kind === 'check' && needsPackages(t.code))) return
-      const report = await engine.runTests([{ name: 'main.py', code: exercise.solution }], 'main.py', exercise.tests)
+      const native = hasPackages(exercise)
+      if (native && !NATIVE_PYTHON) return
+      const report = native ? runNative(exercise.solution, exercise.tests) : await engine.runTests([{ name: 'main.py', code: exercise.solution }], 'main.py', exercise.tests)
       expect(report.error).toBeNull()
       const failures = report.results.filter((r) => !r.passed).map((r) => `${r.name}: ${r.message}`)
       expect(failures).toEqual([])
-    })
+    }, 120_000)
 
     it(`exercise ${exercise.id}: the starter code is not already a solution`, async () => {
-      if (needsPackages(exercise.starter)) return
-      const report = await engine.runTests([{ name: 'main.py', code: exercise.starter }], 'main.py', exercise.tests)
+      const native = hasPackages(exercise)
+      if (native && !NATIVE_PYTHON) return
+      const report = native ? runNative(exercise.starter, exercise.tests) : await engine.runTests([{ name: 'main.py', code: exercise.starter }], 'main.py', exercise.tests)
       const passedAll = !report.error && report.results.length > 0 && report.results.every((r) => r.passed)
       expect(passedAll, 'starter must fail at least one test').toBe(false)
-    })
+    }, 120_000)
   }
 })

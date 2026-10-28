@@ -2,6 +2,53 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Phase 9 — content for tracks 3–7, offline, accessibility, performance, final QA ✅
+
+Done
+- **17 new lessons (68 exercises)**: Intermediate (exceptions, raising errors, classes, generators), Algorithms (recursion, binary
+  search, sorting by hand, Big-O), Data science (NumPy, pandas, Matplotlib), Machine learning (linear regression, classification,
+  overfitting), Projects (text adventure, expense tracker, sales dashboard). 45 lessons in all. Tracks 3–7 stay marked "Preview" and list
+  their remaining lessons under "Coming next".
+- **Verification of the scientific lessons.** NumPy, pandas, Matplotlib and scikit-learn can't be downloaded in my sandbox, so their reference
+  solutions and starters run on a native Python 3.13 (numpy 2.5, pandas 3.1, scikit-learn 1.9, matplotlib 3.11) through the *same*
+  `pythia_runtime.py` the browser loads (`scripts/native_check.py`). Tests are written to be robust to version drift (reference computed in
+  the test, score ranges). CI installs the stack and sets `PYTHIA_NATIVE_PYTHON`.
+- **Every runnable snippet is executed** (`src/content/runnables.test.ts`: 223 snippets across all lessons). This found a real bug in one of my
+  new lessons (a snippet relied on code from the previous snippet). Snippets that fail on purpose are listed and must raise exactly that error.
+  Pythia's own false-positive sweep also caught a rule firing on one of my solutions (`int(item)` on its own line), which I rewrote.
+- **Offline / PWA.** One service worker (`public/sw.js`) now does both jobs: cross-origin isolation headers and caching. App shell precached
+  (2.7 MB) *after* the page has loaded; Python runtime and wheels cached on first use; network-first pages; previous version kept for
+  one generation. `coi-serviceworker` dependency removed. Browser test: load, run Python, go offline, reload, open a lesson, run Python.
+  Settings → Offline tells the learner which state they are in.
+- **Accessibility.** axe-core (WCAG 2.0/2.1 A and AA) over 15 pages in both themes is a test now. It found and I fixed: the search button's
+  name not containing its visible text, text links distinguished by colour only, locked lesson cards faded below contrast, light-theme gold
+  that fell just under 4.5:1 on tinted chips (darkened `#94640a → #855808`), and the Pythia settings button's name.
+- **Performance.** Lighthouse (simulated mobile, headless Chromium, production build): accessibility 100, best practices 96, SEO 100,
+  performance mostly **87–95** (typically 93; occasional runs 72–81). Cause of the spread: the first visit's one-time reload for
+  cross-origin isolation and whether background chunks land inside the measurement window. Fixes this phase: saved-state loading, the
+  achievement watcher and the offline precache all now wait until after load, and the 2.7 MB precache no longer competes with first paint.
+- **Bug found by the accessibility test:** a theme picked in the first moments after load could be overwritten by the saved one; a theme the
+  learner chose now always wins (unit tested).
+- Tests: 1 001 unit/content tests, 34 Playwright tests (24 guest, 6 cloud, offline, 2 accessibility, plus the existing smoke test of
+  landing → lesson → run → complete).
+
+Approximated / caveats (the honest list, for the whole project)
+- **Never run in a real browser against the real services:** the Pyodide CDN (I used a self-hosted core and a local mirror), packages
+  loaded by `loadPackagesFromImports` (NumPy, pandas, Matplotlib, scikit-learn: the lessons are verified natively, not in Pyodide, so a
+  Pyodide-specific difference would slip through), the live Claude call, Supabase (only a fake) and OAuth/email links.
+- **Lesson quality has been machine-checked, not human-tested.** I verified that reference solutions pass, starters fail, hints don't leak, and
+  every snippet runs; I did not sit through all 45 lessons as a beginner. Expect wording and difficulty fixes once real learners try them.
+- Test runs have no timeout: a learner's infinite loop in an exercise would hang the tab until Stop (Stop works, but it is not automatic).
+- The offline cache is browser-specific: it exists after a visit, is evicted if the browser clears site data, and Safari may evict it after
+  about a week without use. Scientific packages are only available offline if the learner ran code importing them while online.
+- Lighthouse numbers are lab numbers from a sandbox; real devices will differ.
+- No analytics or error reporting exist, so I will not know when something breaks for a learner unless they tell you.
+- Last-write-wins sync trusts device clocks (see Phase 8).
+
+You need to do
+- Everything in the earlier "You need to do" lists: enable Pages, deploy the Worker and set `VITE_AI_PROXY_URL`, create the Supabase project.
+- Before launch, play through the lessons yourself or with a few real beginners; adjust hints and difficulty.
+
 ## Phase 8 — optional accounts and local-first sync ✅ (against a fake Supabase, not a live one)
 
 Done
@@ -68,7 +115,7 @@ Approximated / caveats
   must update it when accounts exist.
 - Profile says "guest, no account"; cloud accounts arrive in Phase 8.
 - Achievements are only evaluated while the app is open; they are derived data, so an unlock is never lost, just recorded late.
-- I have not run an accessibility audit (axe / screen reader) on the new pages yet; that is Phase 9.
+- Accessibility audit of these pages: done in Phase 9 (automated). A screen-reader pass by a person has not been done.
 - Statistics and the dashboard have only been looked at with one learner's worth of data (two attempts); heavy-use layouts are untested.
 
 ## Phase 6 — Pythia: local analysis, presentation, AI proxy ✅

@@ -5,6 +5,8 @@ import { applyImport, buildExport, parseExport, previewImport, resetAllData, typ
 import { getDraft, getProfile, getSettings, recordAttempt, saveDraft, saveQuiz, saveSnippet, touchLesson, updateSettings, deleteSnippet } from '@/data/repo'
 import { SCHEMA_VERSION } from '@/data/schema'
 import type { LessonShape } from '@/engine/progress'
+import { hydrateStores } from '@/data/syncStores'
+import { useTheme } from '@/stores/theme'
 
 const lesson: LessonShape = { id: 'L1', exerciseIds: ['e1', 'e2'], quizLength: 2 }
 const pass = [{ name: 't', hidden: false, passed: true }]
@@ -160,5 +162,20 @@ describe('export / import', () => {
     await resetAllData()
     const counts = await Promise.all([db.attempts.count(), db.snippets.count(), db.profile.count(), db.workspace.count()])
     expect(counts).toEqual([0, 0, 0, 0])
+  })
+})
+
+describe('loading saved state', () => {
+  it('applies the saved theme, but never undoes one the learner just picked', async () => {
+    await updateSettings({ theme: 'light' })
+    useTheme.setState({ theme: 'dark', chosen: false })
+    await hydrateStores()
+    expect(useTheme.getState().theme).toBe('light')
+
+    await updateSettings({ theme: 'dark' })
+    useTheme.getState().setTheme('light') // the learner clicked the toggle before loading finished
+    await hydrateStores()
+    expect(useTheme.getState().theme).toBe('light')
+    expect((await getSettings()).theme).toBe('light')
   })
 })

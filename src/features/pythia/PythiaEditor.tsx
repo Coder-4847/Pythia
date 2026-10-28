@@ -155,7 +155,7 @@ export function PythiaEditor({ docKey, initialValue, onChange, onRun, onCheck, f
         )}
         <span className="hidden sm:inline">{AI_LABEL[aiStatus]}</span>
         <div className="ml-auto">
-          <Popover ariaLabel="Pythia settings" align="right" label={<span className="text-xs">{INTENSITIES.find(([id]) => id === pythiaIntensity)![1]} ▾</span>} panelClassName="bottom-full top-auto mb-2 mt-0 w-72 p-3">
+          <Popover ariaLabel={`${INTENSITIES.find(([id]) => id === pythiaIntensity)![1]} (Pythia settings)`} align="right" label={<span className="text-xs">{INTENSITIES.find(([id]) => id === pythiaIntensity)![1]} ▾</span>} panelClassName="bottom-full top-auto mb-2 mt-0 w-72 p-3">
             {() => (
               <div>
                 <p className="text-sm font-medium">How chatty should Pythia be?</p>

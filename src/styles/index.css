@@ -33,7 +33,7 @@
   --c-fg: #15171b;
   --c-muted: #4d535e;
   --c-dim: #5b626e;
-  --c-gold: #94640a; /* darker gold keeps AA contrast on paper */
+  --c-gold: #855808; /* darker gold keeps AA contrast on paper, including tinted chips */
   --c-gold-ink: #fffaf0;
   --c-ok: #2f7a53;
   --c-bad: #b3443b;

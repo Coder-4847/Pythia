@@ -62,7 +62,7 @@ function Unavailable() {
       <h1 className="mt-6 font-serif text-5xl tracking-tight">No account needed</h1>
       <p className="mt-3 text-muted">
         Accounts aren’t switched on for this copy of Pythia, so your progress is saved on this device only. Everything else works exactly the same. You can still{' '}
-        <Link to="/settings" className="text-gold underline-offset-4 hover:underline">
+        <Link to="/settings" className="text-gold underline underline-offset-4">
           export your data
         </Link>{' '}
         to move it elsewhere.
@@ -232,12 +232,12 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
           <>
             <p>
               New here?{' '}
-              <Link to="/signup" className="text-gold underline-offset-4 hover:underline">
+              <Link to="/signup" className="text-gold underline underline-offset-4">
                 Create an account
               </Link>
             </p>
             <p>
-              <Link to="/forgot" className="text-gold underline-offset-4 hover:underline">
+              <Link to="/forgot" className="text-gold underline underline-offset-4">
                 Forgot your password?
               </Link>
             </p>
@@ -246,21 +246,21 @@ export default function AuthPage({ mode }: { mode: AuthMode }) {
         {mode === 'signup' && (
           <p>
             Already have an account?{' '}
-            <Link to="/signin" className="text-gold underline-offset-4 hover:underline">
+            <Link to="/signin" className="text-gold underline underline-offset-4">
               Sign in
             </Link>
           </p>
         )}
         {mode === 'forgot' && (
           <p>
-            <Link to="/signin" className="text-gold underline-offset-4 hover:underline">
+            <Link to="/signin" className="text-gold underline underline-offset-4">
               Back to sign in
             </Link>
           </p>
         )}
         {mode !== 'reset' && (
           <p>
-            <Link to="/learn" className="underline-offset-4 hover:text-fg hover:underline">
+            <Link to="/learn" className="underline underline-offset-4 hover:text-fg">
               Continue as guest
             </Link>{' '}
             · your progress stays on this device

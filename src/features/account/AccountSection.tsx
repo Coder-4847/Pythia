@@ -37,7 +37,7 @@ export function AccountSection() {
         </h2>
         <p className="mt-2 max-w-2xl text-muted">
           Everything is saved on this device, and accounts aren’t switched on for this copy of Pythia. To move to another browser or keep a backup, use{' '}
-          <Link to="/settings" className="text-gold underline-offset-4 hover:underline">
+          <Link to="/settings" className="text-gold underline underline-offset-4">
             export in Settings
           </Link>
           .

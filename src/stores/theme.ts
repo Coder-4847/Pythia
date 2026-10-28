@@ -23,15 +23,19 @@ function apply(theme: Theme) {
 
 interface ThemeState {
   theme: Theme
-  setTheme: (t: Theme) => void
+  /** The learner picked a theme this session. Loading the saved one must not undo that. */
+  chosen: boolean
+  /** `saved` marks the value coming from storage, not from the learner. */
+  setTheme: (t: Theme, source?: 'saved') => void
   toggle: () => void
 }
 
 export const useTheme = create<ThemeState>((set, get) => ({
   theme: readStored(),
-  setTheme: (theme) => {
+  chosen: false,
+  setTheme: (theme, source) => {
     apply(theme)
-    set({ theme })
+    set(source === 'saved' ? { theme } : { theme, chosen: true })
   },
   toggle: () => get().setTheme(get().theme === 'dark' ? 'light' : 'dark'),
 }))

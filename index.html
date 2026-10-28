@@ -26,8 +26,8 @@
     <meta name="twitter:image" content="%BASE_URL%og.png" />
   </head>
   <body>
-    <!-- Cross-origin isolation on static hosts: enables SharedArrayBuffer (input() and Stop). Reloads once on first visit. -->
-    <script src="%BASE_URL%coi-serviceworker.js"></script>
+    <!-- Service worker: cross-origin isolation on static hosts (SharedArrayBuffer for input() and Stop) and offline caching. Reloads once on first visit. -->
+    <script src="%BASE_URL%coi-register.js"></script>
     <div id="root"></div>
     <noscript>Pythia needs JavaScript to run Python in your browser.</noscript>
     <script type="module" src="/src/main.tsx"></script>

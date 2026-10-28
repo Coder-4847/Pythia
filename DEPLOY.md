@@ -43,12 +43,29 @@ To self-host instead, put a full Pyodide distribution on your site and build wit
 `VITE_PYODIDE_BASE=/pyodide/` (the URL must end with `/`). `npm run pyodide:local` copies only the
 core interpreter (enough for pure Python, not for NumPy and friends).
 
-### Cross-origin isolation
+### Cross-origin isolation and offline use (the service worker)
 
 `input()` and the Stop button rely on `SharedArrayBuffer`, which needs cross-origin isolation. GitHub
-Pages cannot send the required headers, so `public/coi-serviceworker.js` adds them. The first visit
-reloads once while that service worker installs. Browsers that block service workers (some private
-modes) still work: input is then typed into a box before running, and Stop restarts Python.
+Pages cannot send the required headers, so `public/sw.js` adds them to the responses it serves. The
+first visit reloads once while the service worker installs (`public/coi-register.js`). Browsers that block
+service workers (some private modes) still work: input is then typed into a box before running, and Stop
+restarts Python.
+
+The same worker makes the app work offline:
+
+- **The app** (every file of the build, about 2.7 MB) is saved a few seconds after the page finishes loading,
+  so it never competes with showing the page. A new deploy is saved on the next visit; the previous version is
+  kept for one generation so a tab that is still open can finish loading its chunks.
+- **The Python runtime** (from jsDelivr, or `/pyodide/` if self-hosted) and any wheels (PyPI) are saved the
+  first time they are used, so a learner must run Python once online. Settings → Offline says which state
+  the browser is in. NumPy, pandas and scikit-learn are only saved if the learner ran code that imports them.
+- Page loads try the network first, so a deploy shows up immediately; the saved copy is used when there is none.
+- The AI proxy and Supabase are never touched by the worker, so they behave exactly as without it.
+
+To change what is saved, edit `public/sw.js` (strategies) or `serviceWorkerPlugin` in `vite.config.ts` (the file
+list). Bump nothing by hand: the cache name is a hash of the build. A broken worker can be removed by visiting
+the site and running `navigator.serviceWorker.getRegistrations().then(r => r.forEach(x => x.unregister()))`
+in the console, or by clearing site data.
 
 ---
 

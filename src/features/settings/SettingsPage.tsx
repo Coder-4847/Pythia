@@ -2,6 +2,7 @@ import { PageShell } from '@/components/ui/PageShell'
 import { ProfileFields } from '@/features/profile/ProfilePage'
 import { DataManagement } from '@/features/settings/DataManagement'
 import { cn } from '@/lib/cn'
+import { OFFLINE_TEXT, useOfflineStatus } from '@/lib/useOfflineStatus'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 import { useSettings, type SettingsValues } from '@/stores/settings'
 import { useTheme, type Theme } from '@/stores/theme'
@@ -68,6 +69,7 @@ export default function SettingsPage() {
   const setTheme = useTheme((s) => s.setTheme)
   const s = useSettings()
   const set = (patch: Partial<SettingsValues>) => s.set(patch)
+  const offline = useOfflineStatus()
 
   return (
     <PageShell eyebrow="Settings" title="Settings" subtitle="Changes save automatically, on this device." narrow>
@@ -104,6 +106,14 @@ export default function SettingsPage() {
             <input type="checkbox" role="switch" aria-labelledby="r-ai" checked={s.aiEnabled} onChange={(e) => set({ aiEnabled: e.target.checked })} className="size-5 accent-[var(--c-gold)]" />
             {s.aiEnabled ? 'On' : 'Off'}
           </label>
+        </Row>
+      </Group>
+
+      <Group id="g-offline" title="Offline">
+        <Row id="r-offline" title="Use without a connection" help="After your first visit the app and the Python runtime are saved in this browser.">
+          <p role="status" data-testid="offline-status" className="max-w-xs text-sm text-muted">
+            {offline ? OFFLINE_TEXT[offline] : 'Checking…'}
+          </p>
         </Row>
       </Group>
 

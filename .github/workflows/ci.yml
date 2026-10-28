@@ -15,6 +15,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The scientific lessons (NumPy, pandas, scikit-learn, Matplotlib) can't be downloaded inside the Node test
+      # environment, so their reference solutions run on a native Python through the same test runner.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install the scientific stack for lesson verification
+        run: |
+          python -m venv "$RUNNER_TEMP/sci"
+          "$RUNNER_TEMP/sci/bin/pip" install numpy pandas scikit-learn matplotlib
+          echo "PYTHIA_NATIVE_PYTHON=$RUNNER_TEMP/sci/bin/python" >> "$GITHUB_ENV"
       - run: npm run lint
       - name: Type-check the AI proxy Worker
         run: npm --prefix worker ci && npm --prefix worker run typecheck

@@ -19,8 +19,8 @@ export default function PrivacyPage() {
     <PageShell eyebrow="Privacy" title="What happens to your data" narrow subtitle="Short version: your learning stays on your device, and we run no analytics.">
       <Section title="What stays on your device">
         <p>
-          Your progress, attempts, code, settings and playground files are stored in your browser (IndexedDB). There is no account and nothing is uploaded. Clearing site data, or <Link to="/settings" className="text-gold hover:underline">resetting in Settings</Link>, removes it. Use{' '}
-          <Link to="/settings" className="text-gold hover:underline">export</Link> to keep a copy.
+          Your progress, attempts, code, settings and playground files are stored in your browser (IndexedDB). There is no account and nothing is uploaded. Clearing site data, or <Link to="/settings" className="text-gold underline underline-offset-4">resetting in Settings</Link>, removes it. Use{' '}
+          <Link to="/settings" className="text-gold underline underline-offset-4">export</Link> to keep a copy.
         </p>
         <p>Python runs in a Web Worker in your browser. Your code is never sent anywhere in order to run it.</p>
       </Section>
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
       <Section title="The optional AI layer">
         <p>
           If the site’s owner has configured an AI proxy and the AI layer is switched on in{' '}
-          <Link to="/settings" className="text-gold hover:underline">Settings</Link>, then when you pause typing and the built-in checks found nothing, the code in your editor, the exercise prompt and, after a crash, the last error message are sent to
+          <Link to="/settings" className="text-gold underline underline-offset-4">Settings</Link>, then when you pause typing and the built-in checks found nothing, the code in your editor, the exercise prompt and, after a crash, the last error message are sent to
           that proxy, which forwards them to Anthropic to write a question. The proxy does not log or store your code. Anthropic processes it under its own terms. Switch the AI layer off and nothing is sent. Without a configured proxy the app never makes this request.
         </p>
       </Section>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           everything else are served from this site.
         </p>
         <p>
-          The first visit may reload once while a small service worker installs; it exists only to enable features Python’s <code className="font-mono text-fg">input()</code> needs and stores no personal data.
+          The first visit may reload once while a small service worker installs; it enables the features Python’s <code className="font-mono text-fg">input()</code> needs and saves a copy of the app and of the Python runtime on your device so Pythia works offline. It stores no personal data.
         </p>
       </Section>
 
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
               Each row is protected by database rules so that only your own account can read or change it. Whoever administers the database could still technically read it, which is why nothing beyond that list is ever uploaded and you shouldn’t put secrets in your code.
             </p>
             <p>
-              Sign out and nothing more is uploaded. <Link to="/profile" className="text-gold hover:underline">Delete account</Link> on the profile page erases your account and all cloud data immediately. Your data on this device is never touched by either.
+              Sign out and nothing more is uploaded. <Link to="/profile" className="text-gold underline underline-offset-4">Delete account</Link> on the profile page erases your account and all cloud data immediately. Your data on this device is never touched by either.
             </p>
           </>
         ) : (

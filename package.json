@@ -32,7 +32,6 @@
     "@replit/codemirror-vim": "^6.4.0",
     "@supabase/supabase-js": "^2.118.0",
     "codemirror": "^6.0.2",
-    "coi-serviceworker": "^0.1.7",
     "dexie": "^4.4.7",
     "dexie-react-hooks": "^4.4.0",
     "framer-motion": "^14.7.1",
@@ -46,6 +45,7 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@electric-sql/pglite": "^0.5.12",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "1.63.0",

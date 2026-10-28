@@ -14,7 +14,7 @@ a static site on GitHub Pages.
 │    │    layer 1: local rules (worker: compile, pyflakes, AST)│
 │    │    layer 2: AI (idle 1.5 s, hash cache, throttle)──┐    │
 │    ├─ Runtime client ──postMessage──► Pyodide Worker    │    │
-│    │      (SharedArrayBuffer via coi-serviceworker:     │    │
+│    │      (SharedArrayBuffer via the sw.js worker:      │    │
 │    │       input() + interrupt; fallback = restart)     │    │
 │    ├─ Progress engine (pure TS) ◄─► Dexie (IndexedDB)   │    │
 │    └─ Sync (Supabase, LWW per item, offline queue)      │    │
@@ -37,7 +37,7 @@ Principles
 
 ```
 .github/workflows/      deploy.yml (build+test+Pages), ci.yml
-public/                 favicons, manifest, coi-serviceworker.js, OG image
+public/                 favicons, manifest, sw.js (isolation + offline), OG image
 worker/                 Cloudflare Worker (AI proxy) + wrangler.toml
 supabase/migrations/    SQL + RLS
 src/

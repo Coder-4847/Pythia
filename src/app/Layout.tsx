@@ -10,6 +10,7 @@ import { AccountMenu } from '@/features/account/AccountMenu'
 import { useCloud } from '@/sync/store'
 import { useToast } from '@/stores/toast'
 import { cn } from '@/lib/cn'
+import { afterLoadIdle } from '@/lib/idle'
 import { scrollToId } from '@/lib/scrollTo'
 import { useTheme } from '@/stores/theme'
 
@@ -42,6 +43,8 @@ const LANDING_NAV = [
   ['playground', 'Playground'],
   ['faq', 'FAQ'],
 ] as const
+
+const MOD_KEY = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl'
 
 const isTyping = (el: EventTarget | null) =>
   el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.closest('.cm-editor') !== null)
@@ -122,6 +125,9 @@ export function Layout({ children }: { children: ReactNode }) {
   const signedIn = useCloud((s) => s.user !== null)
   const hasChoice = useCloud((s) => s.choice !== null)
   const openPalette = useCallback(() => setPalette(true), [])
+  // The achievement watcher is invisible and pulls in the whole curriculum: start it once the page is up.
+  const [watching, setWatching] = useState(false)
+  useEffect(() => afterLoadIdle(() => setWatching(true), 1500), [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -181,11 +187,11 @@ export function Layout({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={openPalette}
-              aria-label="Open the command palette"
               className="hidden items-center gap-2 rounded-full border border-line px-3 py-1.5 text-xs text-dim transition-colors hover:border-line-strong hover:text-muted lg:flex"
             >
-              Search <Kbd>{typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl'}</Kbd>
+              Search <Kbd>{MOD_KEY}</Kbd>
               <Kbd>K</Kbd>
+              <span className="sr-only">(command palette)</span>
             </button>
             <ThemeToggle />
             <AccountMenu />
@@ -241,7 +247,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </main>
       <Toaster />
       <Suspense fallback={null}>
-        <AchievementWatcher />
+        {watching && <AchievementWatcher />}
         {hasChoice && <SyncChoiceDialog />}
         {palette && <CommandPalette open={palette} onClose={() => setPalette(false)} />}
         {shortcuts && <ShortcutsOverlay open={shortcuts} onClose={() => setShortcuts(false)} />}

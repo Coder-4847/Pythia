@@ -45,7 +45,7 @@ function LessonRow({ lesson, state, percent, previous }: { lesson: CatalogLesson
           to={`/lesson/${lesson.id}`}
           className={cn(
             'block rounded-2xl border border-line px-4 py-3.5 transition-colors hover:border-line-strong hover:bg-surface',
-            state === 'locked' && 'opacity-60 hover:opacity-100',
+            state === 'locked' && 'border-dashed',
             state === 'completed' && 'bg-surface/40',
           )}
         >
@@ -124,6 +124,18 @@ function TrackSection({ track, index, progress }: { track: TrackMeta; index: num
               </ul>
             </div>
           ))}
+        </div>
+      )}
+      {lessons.length > 0 && track.roadmap.length > 0 && (
+        <div className="mt-8 rounded-2xl border border-dashed border-line-strong p-5">
+          <p className="font-medium">Coming next</p>
+          <ul className="mt-3 flex flex-wrap gap-1.5">
+            {track.roadmap.map((t) => (
+              <li key={t} className="rounded-md bg-raised px-2 py-1 font-mono text-[11.5px] text-muted">
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>

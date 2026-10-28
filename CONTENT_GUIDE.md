@@ -155,12 +155,37 @@ Guidelines:
 - the **reference solution passes every test** in real Pyodide,
 - the **starter code fails** at least one test (an exercise can't be solved by doing nothing).
 
-Lessons that import NumPy/pandas/matplotlib/scikit-learn can't be executed by the Node test
-environment (those wheels come from the Pyodide CDN), so their solutions are checked separately
-(see STATUS.md); the structural checks still run.
+`src/content/runnables.test.ts` runs every ` ```python run ` block and every worked example, because those
+are things a learner will press Run on. A snippet that is *meant* to fail (to show what an error looks like)
+must be listed in `SHOWS_AN_ERROR` in that file, and then it has to raise exactly that error. Snippets run
+independently, so a block cannot use names defined in an earlier block: define what you use.
+
+`src/workers/analyze.test.ts` also runs Pythia's own checks over every reference solution and worked
+example and fails if Pythia would nag at correct code (a false positive teaches learners to ignore Pythia).
+
+### Lessons that need NumPy, pandas, scikit-learn or Matplotlib
+
+Those packages come from the Pyodide CDN, which the Node test environment can't reach. Their reference
+solutions are therefore run on a **native Python** with the same stack, through the *same test-runner file*
+the browser loads (`scripts/native_check.py` wraps `src/workers/pythia_runtime.py`). Set it up once:
+
+```bash
+python3 -m venv .venv-sci && .venv-sci/bin/pip install numpy pandas scikit-learn matplotlib
+PYTHIA_NATIVE_PYTHON=.venv-sci/bin/python npm test
+```
+
+Without `PYTHIA_NATIVE_PYTHON` those exercises are skipped (everything else still runs); CI always sets it.
+Native Python is not Pyodide, so the versions differ slightly (see STATUS.md). Write such tests to be
+**robust to version differences**: compare against a reference computed in the test (`np.allclose`, ranges for
+accuracy scores, the recipe repeated with the same `random_state`) rather than hard-coding numbers that a
+library release could change.
 
 ## 6. Adding things
 
 - **A module**: add it to `src/content/modules.ts`; lessons join via `module:`. Empty modules are hidden.
-- **A track**: add it to `src/content/tracks.ts`. Tracks with no lessons show as "On the roadmap".
+- **A track**: add it to `src/content/tracks.ts`. Tracks with no lessons show as "On the roadmap"; a track
+  with some lessons shows its `roadmap` list as "Coming next". When you write a roadmap lesson, remove it from the list.
 - **A snippet for the playground**: `src/content/snippets.ts`.
+- **A hand check, before you commit**: open the lesson in `npm run dev`, play it as a beginner would, and
+  try to break each exercise with a plausible wrong answer. The tests prove the reference solution passes;
+  only a person can tell whether the *hints* help.

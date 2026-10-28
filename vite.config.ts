@@ -1,4 +1,6 @@
-import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { join, relative } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -35,6 +37,37 @@ function cspPlugin(env: NodeJS.ProcessEnv): Plugin {
   }
 }
 
+/**
+ * Fills the service worker's precache list from what the build emitted. The Python runtime
+ * (public/pyodide, when self-hosted) is left out: it is large and cached when first used.
+ */
+function serviceWorkerPlugin(): Plugin {
+  let outDir = 'dist'
+  const walk = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const full = join(dir, name)
+      return statSync(full).isDirectory() ? walk(full) : [full]
+    })
+  return {
+    name: 'pythia-sw',
+    apply: 'build',
+    configResolved: (config) => {
+      outDir = config.build.outDir
+    },
+    closeBundle() {
+      const files = walk(outDir)
+        .map((f) => relative(outDir, f).split('\\').join('/'))
+        .filter((f) => f !== 'sw.js' && f !== '404.html' && !f.startsWith('pyodide/') && !f.endsWith('.map') && !f.startsWith('vendor/README'))
+        .sort()
+      const hash = createHash('sha1')
+      for (const f of files) hash.update(f).update(readFileSync(join(outDir, f)))
+      const build = hash.digest('hex').slice(0, 12)
+      const source = readFileSync(join(outDir, 'sw.js'), 'utf8')
+      writeFileSync(join(outDir, 'sw.js'), source.replace("'__PRECACHE__'", JSON.stringify(files)).replace("'__BUILD__'", JSON.stringify(build)))
+    },
+  }
+}
+
 const pyodideVersion = (JSON.parse(readFileSync('node_modules/pyodide/package.json', 'utf8')) as { version: string }).version
 
 export default defineConfig(({ mode }) => ({
@@ -43,7 +76,7 @@ export default defineConfig(({ mode }) => ({
   // The CDN path of the Python runtime is derived from the installed `pyodide` package.
   define: { __PYODIDE_VERSION__: JSON.stringify(pyodideVersion) },
   worker: { format: 'es' },
-  plugins: [react(), tailwindcss(), cspPlugin(process.env)],
+  plugins: [react(), tailwindcss(), cspPlugin(process.env), serviceWorkerPlugin()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: { target: 'es2022', sourcemap: mode !== 'production' },
   test: {

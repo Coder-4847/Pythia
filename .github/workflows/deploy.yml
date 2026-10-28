@@ -24,6 +24,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install the scientific stack for lesson verification
+        run: |
+          python -m venv "$RUNNER_TEMP/sci"
+          "$RUNNER_TEMP/sci/bin/pip" install numpy pandas scikit-learn matplotlib
+          echo "PYTHIA_NATIVE_PYTHON=$RUNNER_TEMP/sci/bin/python" >> "$GITHUB_ENV"
       - run: npm run lint
       - run: npm test
       - name: Build

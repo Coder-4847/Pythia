@@ -28,7 +28,10 @@ export async function hydrateStores(): Promise<void> {
   try {
     const settings = await getSettings()
     useSettings.setState(pick({ ...useSettings.getState(), ...settings }))
-    useTheme.getState().setTheme(settings.theme)
+    // A theme the learner picked while this was loading wins over the saved one, and is saved in its place.
+    const theme = useTheme.getState()
+    if (theme.chosen) await updateSettings({ theme: theme.theme })
+    else theme.setTheme(settings.theme, 'saved')
 
     const workspace = await getWorkspace()
     if (workspace) usePlayground.getState().replaceAll(workspace.files, workspace.activeName)
