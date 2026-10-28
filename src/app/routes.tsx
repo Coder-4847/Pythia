@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'framer-motion'
 import { useReducedMotion } from '@/lib/useReducedMotion'
-import { lazy, Suspense } from 'react'
+import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from '@/app/Layout'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -25,6 +25,44 @@ const Auth = lazy(() => import('@/features/auth/AuthPage'))
 const Settings = lazy(() => import('@/features/settings/SettingsPage'))
 const NotFound = lazy(() => import('@/features/misc/NotFoundPage'))
 
+const CHUNK_ERROR = /dynamically imported module|importing a module script|loading chunk|failed to fetch/i
+
+/**
+ * A page that throws (or a script that fails to download, e.g. a stale copy after a new deploy) must
+ * never leave a blank screen: say what happened, and reload once automatically for the stale-script case.
+ */
+class PageErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Page failed to render:', error, info.componentStack)
+    try {
+      if (CHUNK_ERROR.test(error.message) && !sessionStorage.getItem('pythia.chunk-reload')) {
+        sessionStorage.setItem('pythia.chunk-reload', '1')
+        window.location.reload()
+      }
+    } catch {
+      /* storage blocked: show the message instead */
+    }
+  }
+  render() {
+    const { error } = this.state
+    if (!error) return this.props.children
+    return (
+      <section role="alert" className="mx-auto w-full max-w-xl px-6 py-24">
+        <h1 className="font-serif text-4xl tracking-tight">This page didn’t load.</h1>
+        <p className="mt-3 text-muted">Something went wrong while opening it. Reloading usually fixes it; if it doesn’t, please tell whoever runs this site what is written below.</p>
+        <pre className="mt-4 overflow-x-auto rounded-xl border border-line bg-surface p-4 font-mono text-xs text-muted">{error.name}: {error.message}</pre>
+        <button type="button" onClick={() => window.location.reload()} className="mt-6 rounded-full bg-gold px-5 py-2.5 text-sm font-medium text-gold-ink">
+          Reload
+        </button>
+      </section>
+    )
+  }
+}
+
 function PageFallback() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 px-6 py-24" role="status" aria-label="Loading">
@@ -48,6 +86,7 @@ export function AppRoutes() {
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
         >
+          <PageErrorBoundary key={location.pathname}>
           <Suspense fallback={<PageFallback />}>
             <Routes location={location}>
               <Route path="/" element={<Landing />} />
@@ -72,6 +111,7 @@ export function AppRoutes() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </PageErrorBoundary>
         </m.div>
       </AnimatePresence>
     </Layout>

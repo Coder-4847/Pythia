@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BOy446NO.js";var t=e();function n({children:e}){return(0,t.jsx)(`kbd`,{className:`rounded-md border border-line-strong bg-raised px-1.5 py-0.5 font-mono text-[11px] text-muted`,children:e})}export{n as t};

@@ -188,6 +188,14 @@ e2e/                 landing, lesson, playground, pythia, app, offline, a11y (+ 
 
 ## 7. Known issues and sharp edges
 
+- **Blocked / non-answering IndexedDB (fixed 28 Oct 2026).** The owner reported that Learn → "Your path" never loaded while the playground did.
+  I could not see the live site, but I reproduced exactly that when the browser's `indexedDB.open()` never replies: the curriculum waits on a
+  database read forever. `src/data/db.ts` now probes IndexedDB (4 s limit) before creating the database and, if it can't be used, falls back to an
+  in-memory database (`fake-indexeddb`, downloaded only in that case) so the whole app works for the tab's lifetime; a notice ("This browser is blocking
+  storage…") points to Export. A route error boundary also stops any crash from leaving a blank page and reloads once after a stale-script failure.
+  **The root cause in the owner's browser was never confirmed.** If Learn still fails after this fix, ask which browser/device and whether the new
+  "This page didn't load" box shows an error message.
+
 - **First visit reloads once** (service worker takes over to enable `SharedArrayBuffer`). Lighthouse counts that as a redirect, which is why
   performance varies run to run.
 - **Learner infinite loops** in an exercise's test run have no timeout (Stop works; it is manual).

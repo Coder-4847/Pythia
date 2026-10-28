@@ -1,0 +1,1 @@
+import{r as e,t}from"./react-DvXU6kJ2.js";var n=e(t(),1),r=`Pythia`;function i(e){(0,n.useEffect)(()=>{document.title=e?`${e} · ${r}`:`${r} — the AI Python tutor that sees your bugs coming`},[e])}export{i as t};

@@ -18,6 +18,7 @@ import { useTheme } from '@/stores/theme'
 const CommandPalette = lazy(() => import('@/features/palette/CommandPalette'))
 const ShortcutsOverlay = lazy(() => import('@/features/help/ShortcutsOverlay'))
 const AchievementWatcher = lazy(() => import('@/features/achievements/AchievementWatcher'))
+const StorageNotice = lazy(() => import('@/features/account/StorageNotice'))
 const SyncChoiceDialog = lazy(() => import('@/features/account/SyncChoiceDialog'))
 
 /** Primary navigation between the app's areas. */
@@ -242,6 +243,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       {configured && <CloudRedirects />}
+      <Suspense fallback={null}>{watching && <StorageNotice />}</Suspense>
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>

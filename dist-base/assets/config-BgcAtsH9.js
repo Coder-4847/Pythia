@@ -1,0 +1,1 @@
+var e=``.replace(/\/$/,``),t=!1,n=()=>`${window.location.origin}/Pythia/`;export{n,t as r,e as t};

@@ -1,0 +1,1 @@
+var e=null;function t(t){e=t}function n(t){let n=document.getElementById(t);n&&(e?e.scrollTo(n,{offset:-72}):n.scrollIntoView({behavior:`smooth`,block:`start`}))}function r(){e?.resize()}export{t as n,n as r,r as t};

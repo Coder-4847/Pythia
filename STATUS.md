@@ -2,6 +2,12 @@
 
 Honest running ledger: what is done, what is approximated, and what only you can do.
 
+## Post-launch fix — Learn page hung when storage was blocked
+
+- Reported after the first deploy: "Your path" didn't load, playground did. Reproduced when the browser never answers `indexedDB.open()`.
+  Fixed with a probe + in-memory fallback + notice (`src/data/db.ts`, `StorageNotice`), plus a route error boundary. New unit tests
+  (`db.test.ts`) and a browser test. Root cause in the reporter's browser unconfirmed.
+
 ## Phase 9 — content for tracks 3–7, offline, accessibility, performance, final QA ✅
 
 Done

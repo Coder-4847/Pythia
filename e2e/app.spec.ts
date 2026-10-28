@@ -135,3 +135,17 @@ test('a lesson from a later track works end to end, and the curriculum shows wha
   await page.getByRole('button', { name: 'Check answer' }).click()
   await expect(page.getByText(/All \d+ tests pass/)).toBeVisible({ timeout: 60_000 })
 })
+
+test('when the browser never answers IndexedDB, the path still loads and says progress will not be saved', async ({ browser }) => {
+  const context = await browser.newContext()
+  // Some browsers (private modes, blocked site data) fail to open a database, and a few never reply at all.
+  await context.addInitScript(() => {
+    indexedDB.open = () => ({}) as IDBOpenDBRequest
+  })
+  const page = await context.newPage()
+  await page.goto('/#/learn')
+  await expect(page.getByRole('heading', { name: 'Your path', level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Your first program/ }).first()).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText(/blocking storage/)).toBeVisible({ timeout: 20_000 })
+  await context.close()
+})

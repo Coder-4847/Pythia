@@ -1,0 +1,1 @@
+import{t as e}from"./react-CsDhp_Ag.js";var t=0,n=e(e=>({toasts:[],show:n=>{let r=t++;e(e=>({toasts:[...e.toasts,{id:r,text:n}]})),setTimeout(()=>e(e=>({toasts:e.toasts.filter(e=>e.id!==r)})),2800)}}));export{n as t};

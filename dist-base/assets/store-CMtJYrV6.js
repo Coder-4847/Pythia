@@ -1,0 +1,1 @@
+import{t as e}from"./react-CsDhp_Ag.js";import{r as t}from"./config-BgcAtsH9.js";var n=e(e=>({configured:t,ready:!t,user:null,recovery:!1,returned:!1,phase:`off`,lastSyncAt:null,pending:0,error:null,choice:null,set:t=>e(t)}));export{n as t};

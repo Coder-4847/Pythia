@@ -1,0 +1,1 @@
+import{t as e}from"./react-CsDhp_Ag.js";var t=e(e=>({editorFontSize:14,keybindings:`default`,pythiaIntensity:`balanced`,aiEnabled:!0,reducedMotion:`system`,set:t=>e(t)}));export{t};

@@ -1,4 +1,4 @@
-import Dexie, { type Table } from 'dexie'
+import Dexie, { type DexieOptions, type Table } from 'dexie'
 import type { Achievement, Attempt, Draft, LessonProgress, Profile, QuizResult, Settings, Snippet, Workspace } from '@/data/schema'
 
 export interface OutboxEntry {
@@ -33,8 +33,8 @@ export class PythiaDB extends Dexie {
   /** Small key/value bookkeeping for sync (paired account, pull cursor). Never exported. */
   meta!: Table<MetaEntry, string>
 
-  constructor(name = 'pythia') {
-    super(name)
+  constructor(name = 'pythia', options?: DexieOptions) {
+    super(name, options)
     this.version(1).stores({
       profile: 'id',
       settings: 'id',
@@ -53,7 +53,46 @@ export class PythiaDB extends Dexie {
   }
 }
 
-export const db = new PythiaDB()
+/**
+ * Can this browser open an IndexedDB database? Some can't (private modes, blocked storage, in-app
+ * browsers) and a few never answer at all, which would leave every page that reads progress waiting
+ * forever, so an answer that takes longer than `timeoutMs` counts as "no".
+ */
+export function probeIndexedDB(factory: IDBFactory | null = typeof indexedDB === 'undefined' ? null : indexedDB, timeoutMs = 4000): Promise<boolean> {
+  if (!factory) return Promise.resolve(false)
+  return new Promise((resolve) => {
+    const done = (ok: boolean) => {
+      clearTimeout(timer)
+      resolve(ok)
+    }
+    const timer = setTimeout(() => resolve(false), timeoutMs)
+    try {
+      const request = factory.open('pythia-probe')
+      request.onsuccess = () => {
+        request.result.close()
+        done(true)
+      }
+      request.onerror = () => done(false)
+      request.onblocked = () => done(false)
+    } catch {
+      done(false)
+    }
+  })
+}
+
+/** Where the learner's data lives: the browser's IndexedDB, or (when that is unusable) memory for this tab only. */
+export const storage: { persistent: boolean } = { persistent: true }
+
+async function openDatabase(): Promise<PythiaDB> {
+  if (await probeIndexedDB()) return new PythiaDB()
+  // Keep the app fully working, just without remembering anything after the tab closes. The in-memory
+  // implementation is only downloaded in this case.
+  const { IDBFactory, IDBKeyRange } = await import('fake-indexeddb')
+  storage.persistent = false
+  return new PythiaDB('pythia-memory', { indexedDB: new IDBFactory(), IDBKeyRange })
+}
+
+export const db = await openDatabase()
 
 /** Every table of learner data, in a stable order (used by export/import/reset and sync). `outbox` and `meta` are bookkeeping, not data. */
 export const TABLE_NAMES = [
